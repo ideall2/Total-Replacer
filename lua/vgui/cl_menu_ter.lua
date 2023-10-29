@@ -7,18 +7,6 @@ local function TWR_SettingsPanel(Panel)
     Panel:AddControl("CheckBox", {Label = "Enable Alternate replacement method (Experimental)", Command = "twr_alternative_replace"})
     Panel:ControlHelp("When enabled, weapons will change immediately after spawning, as well as after falling from NPCs. Be sure to fill all tables with weapons otherwise weapons will spawn in huge numbers in one point. I warned you. Be careful.")
     Panel:AddControl("CheckBox", {Label = "Enable TWR Pistol", Command = "twr_pistol"})
-	Panel:AddControl("CheckBox", {Label = "Enable TWR SMG1", Command = "twr_smg1"})
-	Panel:AddControl("CheckBox", {Label = "Enable TWR Shotgun", Command = "twr_shotgun"})
-	Panel:AddControl("CheckBox", {Label = "Enable TWR Revolver", Command = "twr_revolver"})
-    Panel:AddControl("CheckBox", {Label = "Enable TWR RPG", Command = "twr_rpg"})
-    Panel:AddControl("CheckBox", {Label = "Enable TWR Crossbow", Command = "twr_crossbow"})
-	Panel:AddControl("CheckBox", {Label = "Enable TWR Crowbar", Command = "twr_crowbar"})
-	Panel:AddControl("CheckBox", {Label = "Enable TWR AR2", Command = "twr_ar2"})
-	Panel:AddControl("CheckBox", {Label = "Enable TWR Frag Grenade", Command = "twr_frag"})
-	Panel:AddControl("CheckBox", {Label = "Enable TWR SLAM", Command = "twr_slam"})
-    Panel:AddControl("CheckBox", {Label = "Enable TWR Gravity Gun", Command = "twr_physcannon"})
-    Panel:AddControl("CheckBox", {Label = "Enable TWR Stunstick", Command = "twr_stunstick"})
-    Panel:AddControl("CheckBox", {Label = "Enable TWR Bug Bait", Command = "twr_stunstick"})
 
 end
 
@@ -46,54 +34,6 @@ concommand.Add("twr_menu", function(ply, cmd, args)
     local buttons = {
         {name = "Pistol", action = function()
             cur_table_twr_weapon = "weapon_pistol"
-            RunConsoleCommand( "open_twr_menu_edit" )
-        end},
-        {name = "SMG1", action = function()
-            cur_table_twr_weapon = "weapon_smg1"
-            RunConsoleCommand( "open_twr_menu_edit" )
-        end},
-        {name = "Shotgun", action = function()
-            cur_table_twr_weapon = "weapon_shotgun"
-             RunConsoleCommand( "open_twr_menu_edit" )
-        end},
-        {name = "Revolver", action = function() 
-            cur_table_twr_weapon = "weapon_357"
-            RunConsoleCommand( "open_twr_menu_edit" )
-        end},
-        {name = "RPG", action = function() 
-            cur_table_twr_weapon = "weapon_rpg"
-             RunConsoleCommand( "open_twr_menu_edit" )
-        end},
-        {name = "Crossbow", action = function() 
-            cur_table_twr_weapon = "weapon_crossbow"
-            RunConsoleCommand( "open_twr_menu_edit" )
-        end},
-        {name = "Crowbar", action = function()
-            cur_table_twr_weapon = "weapon_crowbar"
-            RunConsoleCommand( "open_twr_menu_edit" )
-        end},
-        {name = "AR2", action = function()
-            cur_table_twr_weapon = "weapon_ar2"
-            RunConsoleCommand( "open_twr_menu_edit" )
-        end},
-        {name = "Frag Grenade", action = function()
-            cur_table_twr_weapon = "weapon_frag"
-            RunConsoleCommand( "open_twr_menu_edit" )
-        end},
-        {name = "SLAM", action = function()
-            cur_table_twr_weapon = "weapon_slam"
-            RunConsoleCommand( "open_twr_menu_edit" )
-        end},
-        {name = "GravityGun", action = function()
-            cur_table_twr_weapon = "weapon_physcannon"
-            RunConsoleCommand( "open_twr_menu_edit" )
-        end},
-        {name = "Stunstick", action = function()
-            cur_table_twr_weapon = "weapon_stunstick"
-            RunConsoleCommand( "open_twr_menu_edit" )
-        end},
-        {name = "Bug Bait", action = function()
-            cur_table_twr_weapon = "weapon_bugbait"
             RunConsoleCommand( "open_twr_menu_edit" )
         end}
     }
@@ -133,15 +73,15 @@ concommand.Add("twr_menu", function(ply, cmd, args)
         confirmButton:SetPos(10, 100)
         confirmButton:SetSize(130, 30)
         confirmButton.DoClick = function()
-            local files, _ = file.Find("total_replacer_weapon/presets/" .. name_preset .."/*.txt", "DATA")
+            local files, _ = file.Find("total_entity_weapon/presets/" .. name_preset .."/*.txt", "DATA")
 
             -- Пройдитесь по каждому файлу
             for _, filename in ipairs(files) do
                 -- Прочитайте содержимое файла
-                local content = file.Read("total_replacer_weapon/presets/".. name_preset .. "/" .. filename, "DATA")
+                local content = file.Read("total_entity_weapon/presets/".. name_preset .. "/" .. filename, "DATA")
     
                 -- Если содержимое существует, записывайте его в новую папку
-                file.Write("total_replacer_weapon/" .. filename, content)
+                file.Write("total_entity_weapon/" .. filename, content)
             end
             frame:Close()
         end
@@ -158,40 +98,40 @@ concommand.Add("twr_menu", function(ply, cmd, args)
 
 
     local function SavePresetTWR(name_preset)
-        local files, _ = file.Find("total_replacer_weapon/*.txt", "DATA")
+        local files, _ = file.Find("total_entity_weapon/*.txt", "DATA")
 
         -- Пройдитесь по каждому файлу
         for _, filename in ipairs(files) do
             -- Прочитайте содержимое файла
-            local content = file.Read("total_replacer_weapon/".. filename, "DATA")
+            local content = file.Read("total_entity_weapon/".. filename, "DATA")
 
             -- Если содержимое существует, записывайте его в новую папку
             if content then
-                file.Write("total_replacer_weapon/presets/".. name_preset .. "/" .. filename, content)
+                file.Write("total_entity_weapon/presets/".. name_preset .. "/" .. filename, content)
             end
         end
     end
 
     local function DeletePresetTWR(name_preset)
         -- Путь к папке, которую вы хотите удалить
-        local folderPath = "total_replacer_weapon/presets/".. name_preset .. "/*"
+        local folderPath = "total_entity_weapon/presets/".. name_preset .. "/*"
 
         -- Получите список всех файлов и папок в указанной папке
         local files, folders = file.Find(folderPath, "DATA")
 
         -- Удаление всех файлов и самой папки
         for _, filename in ipairs(files) do
-            file.Delete("total_replacer_weapon/presets/".. name_preset .. "/" .. filename)
-            file.Delete("total_replacer_weapon/presets/".. name_preset)
+            file.Delete("total_entity_weapon/presets/".. name_preset .. "/" .. filename)
+            file.Delete("total_entity_weapon/presets/".. name_preset)
         end
     end
 
     local function CreateFoldersTWR(name_preset)
-        if not file.Exists("total_replacer_weapon", "DATA") then
-            file.CreateDir("total_replacer_weapon")
+        if not file.Exists("total_entity_weapon", "DATA") then
+            file.CreateDir("total_entity_weapon")
         end
-        if not file.Exists("total_replacer_weapon/presets/".. name_preset, "DATA") then
-            file.CreateDir("total_replacer_weapon/presets/".. name_preset)
+        if not file.Exists("total_entity_weapon/presets/".. name_preset, "DATA") then
+            file.CreateDir("total_entity_weapon/presets/".. name_preset)
         end
     end
 
@@ -253,7 +193,7 @@ concommand.Add("twr_menu", function(ply, cmd, args)
         
         
         -- Получение списка папок из папки data
-        local _, folders_presets = file.Find("data/total_replacer_weapon/presets/*", "GAME")
+        local _, folders_presets = file.Find("data/total_entity_weapon/presets/*", "GAME")
 
         -- Добавление каждой папки
         for _, foldername in ipairs(folders_presets) do
@@ -293,7 +233,7 @@ end)
 -- Функции для чтения и записи индивидуальных файлов игроков
 local function ReadItemsFileTWR(ply)
     table_weapon = cur_table_twr_weapon
-    local content = file.Read("total_replacer_weapon/" .. table_weapon .. ".txt", "DATA")
+    local content = file.Read("total_entity_weapon/" .. table_weapon .. ".txt", "DATA")
     if content then
         return util.JSONToTable(content) or {}
     else
@@ -304,22 +244,22 @@ end
 
 local function WriteItemsFileTWR(ply, items)
     table_weapon = cur_table_twr_weapon
-    if not file.Exists("total_replacer_weapon", "DATA") then
+    if not file.Exists("total_entity_weapon", "DATA") then
         -- Чтоб не ругался из-за отсутствия папок и файлов
-        file.CreateDir("total_replacer_weapon")
-        file.Write("total_replacer_weapon/weapon_pistol.txt", "[]")
-        file.Write("total_replacer_weapon/weapon_ar2.txt", "[]")
-        file.Write("total_replacer_weapon/weapon_crossbow.txt", "[]")
-        file.Write("total_replacer_weapon/weapon_crowbar.txt", "[]")
-        file.Write("total_replacer_weapon/weapon_frag.txt", "[]")
-        file.Write("total_replacer_weapon/weapon_physcannon.txt", "[]")
-        file.Write("total_replacer_weapon/weapon_rpg.txt", "[]")
-        file.Write("total_replacer_weapon/weapon_shotgun.txt", "[]")
-        file.Write("total_replacer_weapon/weapon_slam.txt", "[]")
-        file.Write("total_replacer_weapon/weapon_smg1.txt", "[]")
-        file.Write("total_replacer_weapon/weapon_stunstick.txt", "[]")
+        file.CreateDir("total_entity_weapon")
+        file.Write("total_entity_weapon/weapon_pistol.txt", "[]")
+        file.Write("total_entity_weapon/weapon_ar2.txt", "[]")
+        file.Write("total_entity_weapon/weapon_crossbow.txt", "[]")
+        file.Write("total_entity_weapon/weapon_crowbar.txt", "[]")
+        file.Write("total_entity_weapon/weapon_frag.txt", "[]")
+        file.Write("total_entity_weapon/weapon_physcannon.txt", "[]")
+        file.Write("total_entity_weapon/weapon_rpg.txt", "[]")
+        file.Write("total_entity_weapon/weapon_shotgun.txt", "[]")
+        file.Write("total_entity_weapon/weapon_slam.txt", "[]")
+        file.Write("total_entity_weapon/weapon_smg1.txt", "[]")
+        file.Write("total_entity_weapon/weapon_stunstick.txt", "[]")
     end
-    file.Write("total_replacer_weapon/" .. table_weapon .. ".txt", util.TableToJSON(items))
+    file.Write("total_entity_weapon/" .. table_weapon .. ".txt", util.TableToJSON(items))
 end
 
 
