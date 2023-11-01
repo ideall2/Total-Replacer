@@ -22,12 +22,12 @@ for k, v in pairs(allSpawnableEntities) do
     table.insert(allRandomEntities, k)
 end
 
-EntityOwners_TER = EntityOwners_TER or {} -- Глобальная переменная. Очень долго не мог додуматься, как доебаться до создателя
-                                          -- Без него нельзя присвоить создателя, а если без него, то спавнится сразу 2 энтити
-                                          -- ДА СУКА. Я доебался до него!
-                                          -- Благодаря глобальной переменной я смог вызвать таблицу в нужном месте
-hook.Add("PlayerSpawnedSENT", "SavingOwnerEntity", function(ply,ent)
-    ent:SetNWEntity("CreatedBy", ply)
+EntityOwners_TER = EntityOwners_TER or {} 
+-- Глобальная переменная. Очень долго не мог додуматься, как доебаться до создателя.
+ -- Без него нельзя присвоить создателя, а если без него, то спавнится сразу 2 энтити.
+ -- ДА СУКА. Я доебался до него!
+ -- Благодаря глобальной переменной я смог вызвать таблицу в нужном месте
+hook.Add("PlayerSpawnedSENT", "SavingOwnerEntity", function(ply,ent) -- Тот самый хук который берет создателя при спавне энтити из спавнменю
     EntityOwners_TER[ent] = ply
 end)
 
