@@ -32,8 +32,12 @@ concommand.Add("ter_menu", function(ply, cmd, args)
     
     -- Список кнопок с названиями и действиями
     local buttons = {
-        {name = "Healthkit", action = function()
+        {name = "Health Vial", action = function()
             cur_table_ter_entity = "item_healthvial"
+            RunConsoleCommand( "open_ter_menu_edit" )
+        end},
+        {name = "Health Kit", action = function()
+            cur_table_ter_entity = "item_healthkit"
             RunConsoleCommand( "open_ter_menu_edit" )
         end}
     }
@@ -334,14 +338,6 @@ concommand.Add("open_ter_menu_edit", function(ply, cmd, args)
     local Categorised = {}
 
     local spawnableEntities = list.Get("SpawnableEntities")
-    
-    -- if spawnableEntities then
-    --     print("Spawnable Entities:")
-        
-    --     for className, entTable in pairs(spawnableEntities) do
-    --         print(className)
-    --     end
-    -- end
 
     for k, v in pairs(spawnableEntities) do
         local categ = v.Category or "Other"
