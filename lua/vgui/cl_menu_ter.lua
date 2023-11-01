@@ -20,34 +20,63 @@ local cur_table_ter_entity = ""
 local items = {}
 
 concommand.Add("ter_menu", function(ply, cmd, args)
-     -- Создание главного окна
-    local frame = vgui.Create("DFrame")
-    frame:SetSize(350, 850)    -- Устанавливаем размеры окна
-    frame:Center()             -- Размещаем окно по центру экрана
-    frame:SetTitle("Choose entity..... and replace him!")  -- Заголовок окна
-    frame:MakePopup()          -- Делаем окно активным и позволяем пользователю взаимодействовать с ним
-    ------------------ Начало кода с кнопками оружия
-    local buttonHeight = 50   -- Высота кнопки
-    local padding = 10        -- Отступ между кнопками
-    
-    -- Список кнопок с названиями и действиями
-    local buttons = {
-        {name = "Health Vial", action = function()
-            cur_table_ter_entity = "item_healthvial"
-            RunConsoleCommand( "open_ter_menu_edit" )
-        end},
-        {name = "Health Kit", action = function()
-            cur_table_ter_entity = "item_healthkit"
-            RunConsoleCommand( "open_ter_menu_edit" )
-        end}
-    }
+    local spawnmenu_border = GetConVar("spawnmenu_border")
+    local MarginX = math.Clamp((ScrW() - 1024) * math.max(0.1, spawnmenu_border:GetFloat()), 25, 256)
+    local MarginY = math.Clamp((ScrH() - 768) * math.max(0.1, spawnmenu_border:GetFloat()), 25, 256)
+    if ScrW() < 1024 or ScrH() < 768 then
+        MarginX = 0
+        MarginY = 0
+    end
+    local changed_lists = {}
+    local dirty = false
 
-    for i, btnInfo in ipairs(buttons) do
-        local btn = vgui.Create("DButton", frame)  -- Создаем кнопку
-        btn:SetSize(250, buttonHeight)             -- Устанавливаем размер кнопки
-        btn:SetPos(25, (i-1)*(buttonHeight + padding) + 25)  -- Позиционируем кнопку
-        btn:SetText(btnInfo.name)                  -- Устанавливаем название кнопки
-        btn.DoClick = btnInfo.action               -- Устанавливаем действие для кнопки
+    ply.EntityMenu = vgui.Create("DFrame")
+    ply.EntityMenu:SetSize(1000, 1000)
+    ply.EntityMenu:SetTitle("Entity replacer")
+    ply.EntityMenu:Center()
+    ply.EntityMenu:MakePopup()
+
+    local propscroll = vgui.Create("DScrollPanel", ply.EntityMenu)
+    propscroll:Dock(FILL)
+    propscroll:DockMargin(0, 0, 0, 0)
+
+    local proppanel = vgui.Create("DTileLayout", propscroll:GetCanvas())
+    proppanel:Dock(FILL)
+
+    local Categorised = {}
+
+    local spawnableEntities = list.Get("SpawnableEntities")
+
+
+    for k, v in pairs(spawnableEntities) do
+        local categ = v.Category or "Other"
+        if not isstring(categ) then
+            categ = tostring(categ)
+        end
+
+        Categorised[categ] = Categorised[categ] or {}
+        table.insert(Categorised[categ], v)
+    end
+ 
+    for CategoryName, v in SortedPairs(Categorised) do
+        if CategoryName == "Half-Life 2" or CategoryName == "Fun + Games" then
+            local Header = vgui.Create("ContentHeader", proppanel)
+            Header:SetText(CategoryName)
+            proppanel:Add(Header)
+        end
+        for k, SpawnableEntities in SortedPairsByMemberValue(v, "PrintName") do
+            if CategoryName != "Half-Life 2" and CategoryName != "Fun + Games" then continue end
+            if SpawnableEntities.AdminOnly and not LocalPlayer():IsAdmin() then continue end
+            local icon = vgui.Create("ContentIcon", proppanel)
+            icon:SetMaterial(SpawnableEntities.IconOverride or "entities/" .. SpawnableEntities.ClassName .. ".png")
+            icon:SetName(SpawnableEntities.PrintName or "#" .. SpawnableEntities.ClassName)
+            icon:SetAdminOnly(SpawnableEntities.AdminOnly or false)
+
+            icon.DoClick = function()
+                cur_table_ter_entity = SpawnableEntities.ClassName
+                RunConsoleCommand( "open_ter_menu_edit" )
+            end
+        end
     end
 
 
@@ -223,9 +252,9 @@ concommand.Add("ter_menu", function(ply, cmd, args)
     end
 
 
-    local presetsButton = vgui.Create("DButton", frame)
-    presetsButton:SetSize(100, 50)
-    presetsButton:SetPos(100, 800)
+    local presetsButton = vgui.Create("DButton", ply.EntityMenu)
+    presetsButton:SetSize(300, 100)
+    presetsButton:SetPos(350, 900)
     presetsButton:SetText("Presets")
     presetsButton.DoClick = function()
         OpenPresetsMenuTER()
@@ -252,21 +281,14 @@ local function WriteItemsFileTER(ply, items)
         -- Чтоб не ругался из-за отсутствия папок и файлов
         file.CreateDir("total_entity_replacer")
         file.Write("total_entity_replacer/item_healthvial.txt", "[]")
-        file.Write("total_entity_replacer/weapon_ar2.txt", "[]")
-        file.Write("total_entity_replacer/weapon_crossbow.txt", "[]")
-        file.Write("total_entity_replacer/weapon_crowbar.txt", "[]")
-        file.Write("total_entity_replacer/weapon_frag.txt", "[]")
-        file.Write("total_entity_replacer/weapon_physcannon.txt", "[]")
-        file.Write("total_entity_replacer/weapon_rpg.txt", "[]")
-        file.Write("total_entity_replacer/weapon_shotgun.txt", "[]")
-        file.Write("total_entity_replacer/weapon_slam.txt", "[]")
-        file.Write("total_entity_replacer/weapon_smg1.txt", "[]")
-        file.Write("total_entity_replacer/weapon_stunstick.txt", "[]")
     end
     file.Write("total_entity_replacer/" .. table_entity .. ".txt", util.TableToJSON(items))
 end
 
 
+concommand.Add("tsm", function(ply, cmd, args)
+
+end)
 
 concommand.Add("open_ter_menu_edit", function(ply, cmd, args)
 
@@ -275,8 +297,8 @@ concommand.Add("open_ter_menu_edit", function(ply, cmd, args)
 
     local items = ReadItemsFileTER(ply)
 
-    if IsValid(ply.EntityMenu) then
-        ply.EntityMenu:Remove()
+    if IsValid(ply.EntityEditor) then
+        ply.EntityEditor:Remove()
     end
     
     local spawnmenu_border = GetConVar("spawnmenu_border")
@@ -289,14 +311,14 @@ concommand.Add("open_ter_menu_edit", function(ply, cmd, args)
     local changed_lists = {}
     local dirty = false
 
-    ply.EntityMenu = vgui.Create("DFrame")
-    ply.EntityMenu:SetSize(1000, 900)
-    ply.EntityMenu:SetTitle("Entity replacer")
-    ply.EntityMenu:Center()
-    ply.EntityMenu:MakePopup()
+    ply.EntityEditor = vgui.Create("DFrame")
+    ply.EntityEditor:SetSize(1000, 900)
+    ply.EntityEditor:SetTitle("Entity replacer")
+    ply.EntityEditor:Center()
+    ply.EntityEditor:MakePopup()
     
     --------- Часть кода для панельки выбора оружия (Начало)
-    local panel = vgui.Create("DPanel", ply.EntityMenu)
+    local panel = vgui.Create("DPanel", ply.EntityEditor)
     panel:Dock(FILL)    
 
     local tabs = vgui.Create("DPropertySheet", panel)
@@ -315,7 +337,7 @@ concommand.Add("open_ter_menu_edit", function(ply, cmd, args)
         
     
     -- SpawnIcon для выбора оружия
-    local weaponSelect = vgui.Create("DPanelSelect", ply.EntityMenu)
+    local weaponSelect = vgui.Create("DPanelSelect", ply.EntityEditor)
     weaponSelect:SetSize(500, 890)
     weaponSelect:SetPos(310, 30)
 
@@ -328,7 +350,7 @@ concommand.Add("open_ter_menu_edit", function(ply, cmd, args)
 
 
 
-    local propscroll = vgui.Create("DScrollPanel", ply.EntityMenu)
+    local propscroll = vgui.Create("DScrollPanel", ply.EntityEditor)
     propscroll:Dock(FILL)
     propscroll:DockMargin(300, 24, 16, 16)
 
@@ -376,7 +398,7 @@ concommand.Add("open_ter_menu_edit", function(ply, cmd, args)
     -------------------------------------------------------------------------------------------------------------------------
     
     -- Кнопка удаления
-    local removeButton = vgui.Create("DButton", ply.EntityMenu)
+    local removeButton = vgui.Create("DButton", ply.EntityEditor)
     removeButton:SetSize(280, 25)
     removeButton:SetPos(10, 675)
     removeButton:SetText("Delete selected entity")
@@ -390,7 +412,7 @@ concommand.Add("open_ter_menu_edit", function(ply, cmd, args)
     end
 
     -- Кнопка удаления Всех Записей
-    local removeButtonAll = vgui.Create("DButton", ply.EntityMenu)
+    local removeButtonAll = vgui.Create("DButton", ply.EntityEditor)
     removeButtonAll:SetSize(100, 25)
     removeButtonAll:SetPos(10, 800)
     removeButtonAll:SetText("Delete ALL!")
