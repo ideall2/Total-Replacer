@@ -1,8 +1,8 @@
 
 
-CreateConVar("ter_enable", 1, FCVAR_ARCHIVE,"Enable Total Weapons Replacer?", 0, 1 )
+CreateConVar("ter_enable", 1, FCVAR_ARCHIVE,"Enable Total Entity Replacer?", 0, 1 )
 
-local entityList = {
+local entityList = { -- Список с энтити для генерации консольных команд
     "item_healthkit",
     "item_healthvial",
     "item_battery",
@@ -10,17 +10,18 @@ local entityList = {
     -- Добавьте другие строки
 }
 
-for _, str in pairs(entityList) do
+local weaponList = { -- Список с энтити для генерации консольных команд
+    "weapon_357",
+    "weapon_pistol",
+    -- Добавьте другие строки
+}
+
+
+
+for _, str in pairs(entityList) do -- Создает консольные команды для ограничения спавна энтити
     CreateConVar("ter_"..str, 1, FCVAR_ARCHIVE,"Enable replacer for"..str, 0, 1 )
 end
 
------------------------- Общее
-local allSpawnableEntities = list.Get("SpawnableEntities") -- Получает весь список оружия которое есть в игре (И даже недоступные для спавна)
-local allRandomEntities = {}
---------------------- Заполнение списка Рандомизатора оружия (Начало)
-for k, v in pairs(allSpawnableEntities) do
-    table.insert(allRandomEntities, k)
-end
 
 EntityOwners_TER = EntityOwners_TER or {} 
 -- Глобальная переменная. Очень долго не мог додуматься, как доебаться до создателя.
@@ -31,15 +32,19 @@ hook.Add("PlayerSpawnedSENT", "SavingOwnerEntity", function(ply,ent) -- Тот �
     EntityOwners_TER[ent] = ply
 end)
 
-
-hook.Add("OnEntityCreated", "AlternativeReplacingEntity", function(ent)
-    if GetConVar("ter_enable"):GetBool() == false then return end
+hook.Add("OnEntityCreated", "ReplacingEntity", function(ent) -- При создании энтити тотально проверяет а также заполняет таблицы со всеми энтити(пока только из вкладки Энтити)
+    if GetConVar("ter_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена
     if not table.HasValue(entityList, ent:GetClass()) then return end -- Нужно чтобы код не выполнялся если нет нужного энтити
-        local function CheckedEntity_TER(searched_entity)
+            ------------------------ Общее
+    local allSpawnableEntities = list.Get("SpawnableEntities") -- Получает весь список энтити из спавнменю которое есть в игре (И даже недоступные для спавна)
+    local allRandomEntities = {} -- Списко для Всех случайных оружий
+    for k, v in pairs(allSpawnableEntities) do
+        table.insert(allRandomEntities, k)
+    end
+        
+        -- Функция нужна для определия, есть ли из списка entityList то, что заспавнилось
+        local function CheckedEntity_TER(searched_entity) 
             local nameEnts = ent:GetClass()
-            -- Создайте большой список строк
-    
-            -- Строка, которую вы ищете
             local targetString = nameEnts
     
             -- Флаг для отслеживания, была ли найдена нужная строка
@@ -48,20 +53,16 @@ hook.Add("OnEntityCreated", "AlternativeReplacingEntity", function(ent)
             -- Перебор списка строк и поиск нужной строки
             for _, str in pairs(entityList) do
                 if str == targetString then
-                    -- Если найдена нужная строка, устанавливаем флаг и выходим из цикла
                     stringFound = true
                     searched_entity = targetString
                     return searched_entity
                 end
             end
-    
         end
     
-        
-    ------ Функиции для чтения с разных таблиц
-    local function ReadItemsFile_TER_entity(ply, ent)
-        local readed = "item_healthvial"
-        local content = file.Read("total_entity_replacer/"..readed.. ".txt", "DATA")
+    ------ Функиции для чтения с разных таблиц из папки data
+    local function ReadItemsFile_TER_entity(ent, ply)
+        local content = file.Read("total_entity_replacer/"..ent:GetClass().. ".txt", "DATA")
         if content then
             return util.JSONToTable(content) or {}
         else
@@ -69,20 +70,36 @@ hook.Add("OnEntityCreated", "AlternativeReplacingEntity", function(ent)
         end
     end
 
+    -- Функция замены энтити при спавне, а также выдача прав с возможностью удаления с помощью Z если было заспавнено через спавнменю
     local function ReplacingEntity_TER(ent)
-        timer.Simple(0.001, function()
-            local randomEntity_table = allRandomEntities[math.random(#allRandomEntities)]
+        -- Проверка, является ли энтити транспортом
+        if ent:IsVehicle() then
+            print("This entity is a vehicle.")
+        end
+
+        -- Проверка, является ли энтити оружием
+        if ent:IsWeapon() then
+            print("This entity is a weapon.")
+        end
+
+        -- Проверка, является ли энтити НПС
+        if ent:IsNPC() then
+            print("This entity is an NPC.")
+        end
+        -- Без таймера хрен заработает
+        timer.Simple(0.001, function() 
+            local randomEntity_table = allRandomEntities[math.random(#allRandomEntities)] 
             local list_entity = ReadItemsFile_TER_entity(ent)
             local current_entity = list_entity[math.random(#list_entity)]
             if IsValid(ent) and CheckedEntity_TER(searched_entity) then
-                local newEntity = ents.Create(current_entity or randomEntity_table) 
+                local newEntity = ents.Create(current_entity or randomEntity_table)
                 local owner = EntityOwners_TER[ent]
-                newEntity:SetPos(ent:GetPos()) -- устанавливаем позицию нового оружия
-                newEntity:SetAngles(ent:GetAngles()) -- устанавливаем угол нового оружия
-                newEntity:Spawn() -- спавним новое оружие
+                newEntity:SetPos(ent:GetPos())
+                newEntity:SetAngles(ent:GetAngles())
+                newEntity:Spawn()
                 newEntity:SetOwner(owner)
 
-                local nameEnts = newEntity:GetClass() -- Название энтити
+                local nameEnts = newEntity:GetClass() -- Преобразование в название энтити
                 local undoName = "Replaced Entity: "..nameEnts -- Удаляемое имя и конкретное название энтити
                 undo.Create(undoName) -- Все для работы с Undo и соответсвенно с Z клавишей
                 undo.AddEntity(newEntity) -- Все для работы с Undo и соответсвенно с Z клавишей
@@ -92,9 +109,8 @@ hook.Add("OnEntityCreated", "AlternativeReplacingEntity", function(ent)
             end
         end)
     end
-    ------------------- Заполнение списка Рандомизатора оружия (Конец)
+    -- Проверка того, что энтити есть в списке Заменяемых а также разрешено ли заменять его
     if CheckedEntity_TER() and GetConVar("ter_"..ent:GetClass()):GetBool() == true then
-        -- Ожидаем немного, чтобы убедиться, что оружие полностью создано и инициализировано
         ReplacingEntity_TER(ent)
     end
 end)
