@@ -13,7 +13,30 @@ local entityList = { -- Список с энтити для генерации �
 local weaponList = { -- Список с энтити для генерации консольных команд
     "weapon_357",
     "weapon_pistol",
+    "weapon_bugbait",
+    "weapon_crossbow",
+    "weapon_crowbar",
+    "weapon_frag",
+    "weapon_physcannon",
+    "weapon_ar2",
+    "weapon_rpg",
+    "weapon_slam",
+    "weapon_shotgun",
+    "weapon_smg1",
+    "weapon_stunstick",
     -- Добавьте другие строки
+}
+local vehicleList = {
+    "Airboat",
+    "Jeep",
+    "Pod",
+}
+
+local npcList = {
+    "npc_crow",
+    "npc_pigeon",
+    "npc_seagull",
+    "npc_metropolice",
 }
 
 
@@ -22,6 +45,9 @@ for _, str in pairs(entityList) do -- Создает консольные ком
     CreateConVar("tr_"..str, 1, FCVAR_ARCHIVE,"Enable replacer for"..str, 0, 1 )
 end
 
+for _, str in pairs(weaponList) do -- Создает консольные команды для ограничения спавна энтити
+    CreateConVar("tr_"..str, 1, FCVAR_ARCHIVE,"Enable replacer for"..str, 0, 1 )
+end
 
 EntityOwners_TR = EntityOwners_TR or {} 
 -- Глобальная переменная. Очень долго не мог додуматься, как доебаться до создателя.
@@ -32,7 +58,7 @@ hook.Add("PlayerSpawnedSENT", "SavingOwnerEntity", function(ply,ent) -- Тот �
     EntityOwners_TR[ent] = ply
 end)
 
-hook.Add( "WeaponEquip", "WeaponEquipReplacing", function( weapon, ply )
+hook.Add( "WeaponEquip", "WeaponReplaced", function( weapon, ply )
     if GetConVar("tr_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена
     if not table.HasValue(weaponList, weapon:GetClass()) then return end -- Нужно чтобы код не выполнялся если нет нужного энтити
     ------------------------ Общее
@@ -47,11 +73,9 @@ hook.Add( "WeaponEquip", "WeaponEquipReplacing", function( weapon, ply )
         local targetString = nameEnts
 
         -- Флаг для отслеживания, была ли найдена нужная строка
-        local stringFound = false
         -- Перебор списка строк и поиск нужной строки
         for _, str in pairs(weaponList) do
             if str == targetString then
-                stringFound = true
                 searched_weapon = targetString
                 return searched_weapon
             end
@@ -67,53 +91,45 @@ hook.Add( "WeaponEquip", "WeaponEquipReplacing", function( weapon, ply )
             return {}
         end
     end
+    if CheckedWeapon_TR() and GetConVar("tr_"..weapon:GetClass()):GetBool() == true then
+        -- Без таймера хрен заработает
+        timer.Simple(0.0001, function()
+            if IsValid(weapon) and CheckedWeapon_TR(searched_weapon) then
+                while true do
+                    ---- Перебор, преобразование строк в нужный формат
+                    local randomWeapon_table = allRandomWeapons[math.random(#allRandomWeapons)] 
+                    local list_weapon = ReadItemsFile_TR_weapon(weapon)
+                    local current_weapon = list_weapon[math.random(#list_weapon)] or randomWeapon_table
+                    ---- Обработка строки: запись выглядит примерно так: "sent_ball:100". sent_ball - имя энтити
+                    ---- и 100 - шанс выпадения. Двоиточие разделяет. Но без обработки она как одна строка.
+                    ---- Дальше идет разделение с условием. Результаты в name_weapon и chance_weapon. Если только имя 
+                    ---- То просто имя будет и все
+                    local dataString = current_weapon
+                    local parts = string.Explode(":", dataString)
+                    local name_weapon = string.Trim(parts[1])
+                    local startIndex, endIndex = string.find(dataString, ":")
+                    local chance_weapon = 100
+                    if startIndex then
+                        chance_weapon = tonumber(string.Trim(parts[2])) -- Преобразование строки в число
+                    end
+                    ---- Конец
 
-    -- Без таймера хрен заработает
-    timer.Simple(0.0001, function()
-        if IsValid(weapon) and CheckedWeapon_TR(searched_weapon) then
-            while true do
-                ---- Перебор, преобразование строк в нужный формат
-                local randomWeapon_table = allRandomWeapons[math.random(#allRandomWeapons)] 
-                local list_weapon = ReadItemsFile_TR_weapon(weapon)
-                local current_weapon = list_weapon[math.random(#list_weapon)] or randomWeapon_table
-                ---- Обработка строки: запись выглядит примерно так: "sent_ball:100". sent_ball - имя энтити
-                ---- и 100 - шанс выпадения. Двоиточие разделяет. Но без обработки она как одна строка.
-                ---- Дальше идет разделение с условием. Результаты в name_weapon и chance_weapon. Если только имя 
-                ---- То просто имя будет и все
-                local dataString = current_weapon
-                local parts = string.Explode(":", dataString)
-                local name_weapon = string.Trim(parts[1])
-                local startIndex, endIndex = string.find(dataString, ":")
-                local chance_weapon = 100
-                if startIndex then
-                    chance_weapon = tonumber(string.Trim(parts[2])) -- Преобразование строки в число
-                end
-                ---- Конец
 
+                    ------------------- Шанс
+                    local chance = math.random(1, 100)
+                    if chance <= chance_weapon then
+                        local newWeapon = name_weapon
+                        ply:StripWeapon(CheckedWeapon_TR())
+                        ply:Give(newWeapon)
+                        break
+                    else
+                        -- В противном случае, продолжаем выполнение цикла
+                    end
 
-                ------------------- Шанс
-                local chance = math.random(1, 100)
-                if chance <= chance_weapon then
-                    local newWeapon = name_weapon
-                    ply:StripWeapon(CheckedWeapon_TR())
-                    ply:Give(newWeapon)
-                    -- newWeapon:SetPos(weapon:GetPos())
-                    -- newWeapon:SetAngles(weapon:GetAngles())
-                    -- newWeapon:Spawn()
-                    -- newWeapon:Activate()
-                    -- newWeapon:SetOwner(owner)
-                    -- weapon:Remove() -- удаляем энтити
-                    
-                    break
-                else
-                    -- В противном случае, продолжаем выполнение цикла
-                end
-                if CheckedWeapon_TR() and GetConVar("tr_"..weapon:GetClass()):GetBool() == true then
-                    ReplacingWeapon_TR(weapon)
                 end
             end
-        end
-    end)
+        end)
+    end
 end)
 
 hook.Add("OnEntityCreated", "ReplacingEntity", function(ent) -- При создании энтити тотально проверяет а также заполняет таблицы со всеми энтити(пока только из вкладки Энтити)
@@ -164,65 +180,63 @@ hook.Add("OnEntityCreated", "ReplacingEntity", function(ent) -- При созд�
         --     print("This entity is a weapon.")
         -- end
 
-        -- -- Проверка, является ли энтити НПС
-        -- if ent:IsNPC() then
-        --     print("This entity is an NPC.")
-        -- end
-
-        -- Без таймера хрен заработает
-        timer.Simple(0.0001, function()
-            if IsValid(ent) and CheckedEntity_TR(searched_entity) and not ent:GetOwner():IsPlayer() and not ent:GetOwner():IsNPC() then
-                while true do
-                    ---- Перебор, преобразование строк в нужный формат
-                    local randomEntity_table = allRandomEntities[math.random(#allRandomEntities)] 
-                    local list_entity = ReadItemsFile_TR_entity(ent)
-                    local current_entity = list_entity[math.random(#list_entity)] or randomEntity_table
-                    ---- Обработка строки: запись выглядит примерно так: "sent_ball:100". sent_ball - имя энтити
-                    ---- и 100 - шанс выпадения. Двоиточие разделяет. Но без обработки она как одна строка.
-                    ---- Дальше идет разделение с условием. Результаты в name_entity и chance_entity. Если только имя 
-                    ---- То просто имя будет и все
-                    local dataString = current_entity
-                    local parts = string.Explode(":", dataString)
-                    local name_entity = string.Trim(parts[1])
-                    local startIndex, endIndex = string.find(dataString, ":")
-                    local chance_entity = 100
-                    if startIndex then
-                        chance_entity = tonumber(string.Trim(parts[2])) -- Преобразование строки в число
-                    end
-                    ---- Конец
+        -- Проверка, является ли энтити НПС
+        
+        if not ent:IsNPC() and not ent:IsWeapon() and not ent:IsVehicle() then
+            -- Без таймера хрен заработает
+            timer.Simple(0.0001, function()
+                if IsValid(ent) and CheckedEntity_TR(searched_entity) and not ent:GetOwner():IsPlayer() and not ent:GetOwner():IsNPC() then
+                    while true do
+                        ---- Перебор, преобразование строк в нужный формат
+                        local randomEntity_table = allRandomEntities[math.random(#allRandomEntities)] 
+                        local list_entity = ReadItemsFile_TR_entity(ent)
+                        local current_entity = list_entity[math.random(#list_entity)] or randomEntity_table
+                        ---- Обработка строки: запись выглядит примерно так: "sent_ball:100". sent_ball - имя энтити
+                        ---- и 100 - шанс выпадения. Двоиточие разделяет. Но без обработки она как одна строка.
+                        ---- Дальше идет разделение с условием. Результаты в name_entity и chance_entity. Если только имя 
+                        ---- То просто имя будет и все
+                        local dataString = current_entity
+                        local parts = string.Explode(":", dataString)
+                        local name_entity = string.Trim(parts[1])
+                        local startIndex, endIndex = string.find(dataString, ":")
+                        local chance_entity = 100
+                        if startIndex then
+                            chance_entity = tonumber(string.Trim(parts[2])) -- Преобразование строки в число
+                        end
+                        ---- Конец
 
 
-                    ------------------- Шанс
-                    local chance = math.random(1, 100)
-                    if chance <= chance_entity then
-                        local newEntity = ents.Create(name_entity)
-                        local owner = EntityOwners_TR[ent]
+                        ------------------- Шанс
+                        local chance = math.random(1, 100)
+                        if chance <= chance_entity then
+                            local newEntity = ents.Create(name_entity)
+                            local owner = EntityOwners_TR[ent]
 
-                        newEntity:SetPos(ent:GetPos())
-                        newEntity:SetAngles(ent:GetAngles())
-                        newEntity:Spawn()
-                        newEntity:Activate()
-                        newEntity:SetOwner(owner)
+                            newEntity:SetPos(ent:GetPos())
+                            newEntity:SetAngles(ent:GetAngles())
+                            newEntity:Spawn()
+                            newEntity:Activate()
+                            newEntity:SetOwner(owner)
 
-                        local nameEnts = newEntity:GetClass() -- Преобразование в название энтити
-                        local undoName = "Replaced Entity: "..nameEnts -- Удаляемое имя и конкретное название энтити
-                        undo.Create(undoName) -- Все для работы с Undo и соответсвенно с Z клавишей
-                        undo.AddEntity(newEntity) -- Все для работы с Undo и соответсвенно с Z клавишей
-                        undo.SetPlayer(owner) -- Присваивание игроку предмет
-                        undo.Finish() -- Наконец можно удалить этот энтити. Не зря ебался с этой хуйней
-                        ent:Remove() -- удаляем энтити
-                        break
-                    else
-                        -- В противном случае, продолжаем выполнение цикла
+                            local nameEnts = newEntity:GetClass() -- Преобразование в название энтити
+                            local undoName = "Replaced Entity: "..nameEnts -- Удаляемое имя и конкретное название энтити
+                            undo.Create(undoName) -- Все для работы с Undo и соответсвенно с Z клавишей
+                            undo.AddEntity(newEntity) -- Все для работы с Undo и соответсвенно с Z клавишей
+                            undo.SetPlayer(owner) -- Присваивание игроку предмет
+                            undo.Finish() -- Наконец можно удалить этот энтити. Не зря ебался с этой хуйней
+                            ent:Remove() -- удаляем энтити
+                            break
+                        else
+                            -- В противном случае, продолжаем выполнение цикла
+                        end
                     end
                 end
-            end
-        end)
+            end)
+        end
     end
     -- Проверка того, что энтити есть в списке Заменяемых а также разрешено ли заменять его
         if CheckedEntity_TR() and GetConVar("tr_"..ent:GetClass()):GetBool() == true then
             ReplacingEntity_TR(ent)
         end
-    -- end
 end)
 

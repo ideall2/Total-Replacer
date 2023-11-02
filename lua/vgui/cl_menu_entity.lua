@@ -1,7 +1,63 @@
+
+concommand.Add("tr_menu", function(ply, cmd, args)
+    -- Функция для создания меню
+    local function CreateMenu()
+        local frame = vgui.Create("DFrame")
+        frame:SetSize(300, 200)
+        frame:SetTitle("Welcome to Total Replacer.")
+        frame:Center()
+
+        local button1 = vgui.Create("DButton", frame)
+        button1:SetPos(10, 30)
+        button1:SetSize(280, 30)
+        button1:SetText("Replace Entities")
+        button1.DoClick = function()
+            -- Здесь вы можете указать консольную команду для кнопки 1
+            LocalPlayer():ConCommand("tr_entity_menu")
+            frame:Close()
+        end
+
+        local button2 = vgui.Create("DButton", frame)
+        button2:SetPos(10, 70)
+        button2:SetSize(280, 30)
+        button2:SetText("Команда 2")
+        button2.DoClick = function()
+            -- Здесь вы можете указать консольную команду для кнопки 2
+            LocalPlayer():ConCommand("your_command2")
+            frame:Close()
+        end
+
+        local button3 = vgui.Create("DButton", frame)
+        button3:SetPos(10, 110)
+        button3:SetSize(280, 30)
+        button3:SetText("Команда 3")
+        button3.DoClick = function()
+            -- Здесь вы можете указать консольную команду для кнопки 3
+            LocalPlayer():ConCommand("your_command3")
+            frame:Close()
+        end
+
+        local button4 = vgui.Create("DButton", frame)
+        button4:SetPos(10, 150)
+        button4:SetSize(280, 30)
+        button4:SetText("Команда 4")
+        button4.DoClick = function()
+            -- Здесь вы можете указать консольную команду для кнопки 4
+            LocalPlayer():ConCommand("your_command4")
+            frame:Close()
+        end
+
+        frame:MakePopup()
+    end
+
+    -- Запускаем функцию для создания меню
+    CreateMenu()
+end)
+
 local function TR_SettingsPanel(Panel)
     local openMenuButton = Panel:Button("Open TR")
     openMenuButton.DoClick = function()
-        RunConsoleCommand("tr_menu")
+        RunConsoleCommand("tr_entity_menu")
     end
     Panel:AddControl("CheckBox", {Label = "Enable Total Replacer", Command = "tr_enable"})
     Panel:ControlHelp("When enabled, Entity will change immediately after spawning, as well as after falling from NPCs. Be sure to fill all tables with Entitys otherwise Entitys will spawn in huge numbers in one point. I warned you. Be careful.")
@@ -17,7 +73,7 @@ hook.Add("PopulateToolMenu", "TR_SettingsPanel", TR_SettingsPaneladd)
 local cur_table_tr_entity = ""
 local items = {}
 
-concommand.Add("tr_menu", function(ply, cmd, args)
+concommand.Add("tr_entity_menu", function(ply, cmd, args)
     local spawnmenu_border = GetConVar("spawnmenu_border")
     local MarginX = math.Clamp((ScrW() - 1024) * math.max(0.1, spawnmenu_border:GetFloat()), 25, 256)
     local MarginY = math.Clamp((ScrH() - 768) * math.max(0.1, spawnmenu_border:GetFloat()), 25, 256)
@@ -72,7 +128,7 @@ concommand.Add("tr_menu", function(ply, cmd, args)
 
             icon.DoClick = function()
                 cur_table_tr_entity = SpawnableEntities.ClassName
-                RunConsoleCommand( "open_tr_menu_edit" )
+                RunConsoleCommand( "open_tr_menu_edit_entity" )
             end
         end
     end
@@ -85,7 +141,7 @@ concommand.Add("tr_menu", function(ply, cmd, args)
 
     --------------------------------------------------------------------------------------------------------------------------- Начало кода для пресетов
 
-    function LoadPresetTR(name_preset)
+    local function LoadPresetTR(name_preset)
         local frame = vgui.Create("DFrame")
         frame:SetSize(300, 150)
         frame:Center()
@@ -262,7 +318,7 @@ end)
 
 
 -- Функции для чтения и записи индивидуальных файлов игроков
-local function ReadItemsFileTR(ply)
+local function ReadItemsFileTR_Entity(ply)
     local content = file.Read("total_entity_replacer/" .. cur_table_tr_entity .. ".txt", "DATA")
     if content then
         return util.JSONToTable(content) or {}
@@ -272,7 +328,7 @@ local function ReadItemsFileTR(ply)
     return content
 end
 
-local function WriteItemsFileTR(ply, items)
+local function WriteItemsFileTR_Entity(ply, items)
     if not file.Exists("total_entity_replacer", "DATA") or not file.Exists("total_weapon_replacer", "DATA") then
         -- Чтоб не ругался из-за отсутствия папок и файлов
         file.CreateDir("total_entity_replacer")
@@ -283,12 +339,12 @@ local function WriteItemsFileTR(ply, items)
     file.Write("total_entity_replacer/" .. cur_table_tr_entity .. ".txt", util.TableToJSON(items))
 end
 
-concommand.Add("open_tr_menu_edit", function(ply, cmd, args)
+concommand.Add("open_tr_menu_edit_entity", function(ply, cmd, args)
 
 
     if not ply:IsPlayer() then return end
 
-    local items = ReadItemsFileTR(ply)
+    local items = ReadItemsFileTR_Entity(ply)
 
     if IsValid(ply.EntityEditor) then
         ply.EntityEditor:Remove()
@@ -382,7 +438,7 @@ concommand.Add("open_tr_menu_edit", function(ply, cmd, args)
                 if not table.HasValue(items, SpawnableEntities.ClassName.. ":"..chance) then
                     table.insert(items, SpawnableEntities.ClassName.. ":"..chance)
                     entityList:AddLine(SpawnableEntities.ClassName.. ":"..chance)
-                    WriteItemsFileTR(ply, items)
+                    WriteItemsFileTR_Entity(ply, items)
                 end
             end
             icon.DoRightClick = function()
@@ -408,7 +464,7 @@ concommand.Add("open_tr_menu_edit", function(ply, cmd, args)
                     if not table.HasValue(items, SpawnableEntities.ClassName.. ":"..chance) then
                         table.insert(items, SpawnableEntities.ClassName.. ":"..chance)
                         entityList:AddLine(SpawnableEntities.ClassName.. ":"..chance)
-                        WriteItemsFileTR(ply, items)
+                        WriteItemsFileTR_Entity(ply, items)
                     end
                     myPanel:Close()
                 end
@@ -428,7 +484,7 @@ concommand.Add("open_tr_menu_edit", function(ply, cmd, args)
         local selectedLine = entityList:GetSelectedLine()
         if selectedLine then
             table.remove(items, selectedLine)
-            WriteItemsFileTR(ply, items)   
+            WriteItemsFileTR_Entity(ply, items)   
             entityList:RemoveLine(selectedLine)    
         end
     end
@@ -442,6 +498,6 @@ concommand.Add("open_tr_menu_edit", function(ply, cmd, args)
         local selectedLine = entityList:GetSelectedLine()
         table.Empty(items)
         entityList:Clear()
-        WriteItemsFileTR(ply, items)
+        WriteItemsFileTR_Entity(ply, items)
     end
 end)

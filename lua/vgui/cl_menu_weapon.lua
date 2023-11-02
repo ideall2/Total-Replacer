@@ -1,23 +1,8 @@
-local function TR_SettingsPanel(Panel)
-    local openMenuButton = Panel:Button("Open TR")
-    openMenuButton.DoClick = function()
-        RunConsoleCommand("tr_menu")
-    end
-    Panel:AddControl("CheckBox", {Label = "Enable Total Replacer", Command = "tr_enable"})
-    Panel:ControlHelp("When enabled, Entity will change immediately after spawning, as well as after falling from NPCs. Be sure to fill all tables with Entitys otherwise Entitys will spawn in huge numbers in one point. I warned you. Be careful.")
 
-end
+local cur_table_tr_weapon = ""
+local items_swep = {}
 
-local function TR_SettingsPaneladd()
-	spawnmenu.AddToolMenuOption("Options", "Total Replacer", "TR", "TR menu", "", "", TR_SettingsPanel)
-end
-
-hook.Add("PopulateToolMenu", "TR_SettingsPanel", TR_SettingsPaneladd)
-
-local cur_table_tr_entity = ""
-local items = {}
-
-concommand.Add("tr_menu", function(ply, cmd, args)
+concommand.Add("tr_weapon_menu", function(ply, cmd, args)
     local spawnmenu_border = GetConVar("spawnmenu_border")
     local MarginX = math.Clamp((ScrW() - 1024) * math.max(0.1, spawnmenu_border:GetFloat()), 25, 256)
     local MarginY = math.Clamp((ScrH() - 768) * math.max(0.1, spawnmenu_border:GetFloat()), 25, 256)
@@ -28,13 +13,13 @@ concommand.Add("tr_menu", function(ply, cmd, args)
     local changed_lists = {}
     local dirty = false
 
-    ply.EntityMenu = vgui.Create("DFrame")
-    ply.EntityMenu:SetSize(1000, 1000)
-    ply.EntityMenu:SetTitle("Total Replacer")
-    ply.EntityMenu:Center()
-    ply.EntityMenu:MakePopup()
+    ply.WeaponMenu = vgui.Create("DFrame")
+    ply.WeaponMenu:SetSize(1000, 1000)
+    ply.WeaponMenu:SetTitle("Total Replacer")
+    ply.WeaponMenu:Center()
+    ply.WeaponMenu:MakePopup()
 
-    local propscroll = vgui.Create("DScrollPanel", ply.EntityMenu)
+    local propscroll = vgui.Create("DScrollPanel", ply.WeaponMenu)
     propscroll:Dock(FILL)
     propscroll:DockMargin(0, 0, 0, 0)
 
@@ -43,7 +28,7 @@ concommand.Add("tr_menu", function(ply, cmd, args)
 
     local Categorised = {}
 
-    local spawnableEntities = list.Get("SpawnableEntities")
+    local spawnableEntities = list.Get("Weapon")
 
 
     for k, v in pairs(spawnableEntities) do
@@ -57,13 +42,13 @@ concommand.Add("tr_menu", function(ply, cmd, args)
     end
  
     for CategoryName, v in SortedPairs(Categorised) do
-        if CategoryName == "Half-Life 2" or CategoryName == "Fun + Games" then
+        if CategoryName == "Half-Life 2" or CategoryName == "Other" then
             local Header = vgui.Create("ContentHeader", proppanel)
             Header:SetText(CategoryName)
             proppanel:Add(Header)
         end
         for k, SpawnableEntities in SortedPairsByMemberValue(v, "PrintName") do
-            if CategoryName != "Half-Life 2" and CategoryName != "Fun + Games" then continue end
+            if CategoryName != "Half-Life 2" and CategoryName != "Other" then continue end
             if SpawnableEntities.AdminOnly and not LocalPlayer():IsAdmin() then continue end
             local icon = vgui.Create("ContentIcon", proppanel)
             icon:SetMaterial(SpawnableEntities.IconOverride or "entities/" .. SpawnableEntities.ClassName .. ".png")
@@ -71,8 +56,8 @@ concommand.Add("tr_menu", function(ply, cmd, args)
             icon:SetAdminOnly(SpawnableEntities.AdminOnly or false)
 
             icon.DoClick = function()
-                cur_table_tr_entity = SpawnableEntities.ClassName
-                RunConsoleCommand( "open_tr_menu_edit" )
+                cur_table_tr_weapon = SpawnableEntities.ClassName
+                RunConsoleCommand( "open_tr_menu_edit_weapon" )
             end
         end
     end
@@ -85,7 +70,7 @@ concommand.Add("tr_menu", function(ply, cmd, args)
 
     --------------------------------------------------------------------------------------------------------------------------- Начало кода для пресетов
 
-    function LoadPresetTR(name_preset)
+    local function LoadPresetTR(name_preset)
         local frame = vgui.Create("DFrame")
         frame:SetSize(300, 150)
         frame:Center()
@@ -104,15 +89,15 @@ concommand.Add("tr_menu", function(ply, cmd, args)
         confirmButton:SetPos(10, 100)
         confirmButton:SetSize(130, 30)
         confirmButton.DoClick = function()
-            local files, _ = file.Find("total_entity_replacer/presets/" .. name_preset .."/*.txt", "DATA")
+            local files, _ = file.Find("total_weapon_replacer/presets/" .. name_preset .."/*.txt", "DATA")
 
             -- Пройдитесь по каждому файлу
             for _, filename in ipairs(files) do
                 -- Прочитайте содержимое файла
-                local content = file.Read("total_entity_replacer/presets/".. name_preset .. "/" .. filename, "DATA")
+                local content = file.Read("total_weapon_replacer/presets/".. name_preset .. "/" .. filename, "DATA")
     
                 -- Если содержимое существует, записывайте его в новую папку
-                file.Write("total_entity_replacer/" .. filename, content)
+                file.Write("total_weapon_replacer/" .. filename, content)
             end
             frame:Close()
         end
@@ -129,40 +114,40 @@ concommand.Add("tr_menu", function(ply, cmd, args)
 
 
     local function SavePresetTR(name_preset)
-        local files, _ = file.Find("total_entity_replacer/*.txt", "DATA")
+        local files, _ = file.Find("total_weapon_replacer/*.txt", "DATA")
 
         -- Пройдитесь по каждому файлу
         for _, filename in ipairs(files) do
             -- Прочитайте содержимое файла
-            local content = file.Read("total_entity_replacer/".. filename, "DATA")
+            local content = file.Read("total_weapon_replacer/".. filename, "DATA")
 
             -- Если содержимое существует, записывайте его в новую папку
             if content then
-                file.Write("total_entity_replacer/presets/".. name_preset .. "/" .. filename, content)
+                file.Write("total_weapon_replacer/presets/".. name_preset .. "/" .. filename, content)
             end
         end
     end
 
     local function DeletePresetTR(name_preset)
         -- Путь к папке, которую вы хотите удалить
-        local folderPath = "total_entity_replacer/presets/".. name_preset .. "/*"
+        local folderPath = "total_weapon_replacer/presets/".. name_preset .. "/*"
 
         -- Получите список всех файлов и папок в указанной папке
         local files, folders = file.Find(folderPath, "DATA")
 
         -- Удаление всех файлов и самой папки
         for _, filename in ipairs(files) do
-            file.Delete("total_entity_replacer/presets/".. name_preset .. "/" .. filename)
-            file.Delete("total_entity_replacer/presets/".. name_preset)
+            file.Delete("total_weapon_replacer/presets/".. name_preset .. "/" .. filename)
+            file.Delete("total_weapon_replacer/presets/".. name_preset)
         end
     end
 
     local function CreateFoldersTR(name_preset)
-        if not file.Exists("total_entity_replacer", "DATA") then
-            file.CreateDir("total_entity_replacer")
+        if not file.Exists("total_weapon_replacer", "DATA") then
+            file.CreateDir("total_weapon_replacer")
         end
-        if not file.Exists("total_entity_replacer/presets/".. name_preset, "DATA") then
-            file.CreateDir("total_entity_replacer/presets/".. name_preset)
+        if not file.Exists("total_weapon_replacer/presets/".. name_preset, "DATA") then
+            file.CreateDir("total_weapon_replacer/presets/".. name_preset)
         end
     end
 
@@ -224,7 +209,7 @@ concommand.Add("tr_menu", function(ply, cmd, args)
         
         
         -- Получение списка папок из папки data
-        local _, folders_presets = file.Find("data/total_entity_replacer/presets/*", "GAME")
+        local _, folders_presets = file.Find("data/total_weapon_replacer/presets/*", "GAME")
 
         -- Добавление каждой папки
         for _, foldername in ipairs(folders_presets) do
@@ -250,7 +235,7 @@ concommand.Add("tr_menu", function(ply, cmd, args)
     end
 
 
-    local presetsButton = vgui.Create("DButton", ply.EntityMenu)
+    local presetsButton = vgui.Create("DButton", ply.WeaponMenu)
     presetsButton:SetSize(300, 100)
     presetsButton:SetPos(350, 900)
     presetsButton:SetText("Presets")
@@ -262,8 +247,8 @@ end)
 
 
 -- Функции для чтения и записи индивидуальных файлов игроков
-local function ReadItemsFileTR(ply)
-    local content = file.Read("total_entity_replacer/" .. cur_table_tr_entity .. ".txt", "DATA")
+local function ReadItemsFileTR_Weapon(ply)
+    local content = file.Read("total_weapon_replacer/" .. cur_table_tr_weapon .. ".txt", "DATA")
     if content then
         return util.JSONToTable(content) or {}
     else
@@ -272,7 +257,7 @@ local function ReadItemsFileTR(ply)
     return content
 end
 
-local function WriteItemsFileTR(ply, items)
+local function WriteItemsFileTR_Weapon(ply, items_swep)
     if not file.Exists("total_entity_replacer", "DATA") or not file.Exists("total_weapon_replacer", "DATA") then
         -- Чтоб не ругался из-за отсутствия папок и файлов
         file.CreateDir("total_entity_replacer")
@@ -280,18 +265,18 @@ local function WriteItemsFileTR(ply, items)
         file.Write("total_entity_replacer/item_healthvial.txt", "[]")
         file.Write("total_weapon_replacer/weapon_pistol.txt", "[]")
     end
-    file.Write("total_entity_replacer/" .. cur_table_tr_entity .. ".txt", util.TableToJSON(items))
+    file.Write("total_weapon_replacer/" .. cur_table_tr_weapon .. ".txt", util.TableToJSON(items_swep))
 end
 
-concommand.Add("open_tr_menu_edit", function(ply, cmd, args)
+concommand.Add("open_tr_menu_edit_weapon", function(ply, cmd, args)
 
 
     if not ply:IsPlayer() then return end
 
-    local items = ReadItemsFileTR(ply)
+    local items_swep = ReadItemsFileTR_Weapon(ply)
 
-    if IsValid(ply.EntityEditor) then
-        ply.EntityEditor:Remove()
+    if IsValid(ply.WeaponEditor) then
+        ply.WeaponEditor:Remove()
     end
     
     local spawnmenu_border = GetConVar("spawnmenu_border")
@@ -304,14 +289,14 @@ concommand.Add("open_tr_menu_edit", function(ply, cmd, args)
     local changed_lists = {}
     local dirty = false
 
-    ply.EntityEditor = vgui.Create("DFrame")
-    ply.EntityEditor:SetSize(1000, 900)
-    ply.EntityEditor:SetTitle("Entity replacer")
-    ply.EntityEditor:Center()
-    ply.EntityEditor:MakePopup()
+    ply.WeaponEditor = vgui.Create("DFrame")
+    ply.WeaponEditor:SetSize(1000, 900)
+    ply.WeaponEditor:SetTitle("Weapon replacer")
+    ply.WeaponEditor:Center()
+    ply.WeaponEditor:MakePopup()
     
     --------- Часть кода для панельки выбора оружия (Начало)
-    local panel = vgui.Create("DPanel", ply.EntityEditor)
+    local panel = vgui.Create("DPanel", ply.WeaponEditor)
     panel:Dock(FILL)    
 
     local tabs = vgui.Create("DPropertySheet", panel)
@@ -319,23 +304,23 @@ concommand.Add("open_tr_menu_edit", function(ply, cmd, args)
 
     local tab1 = vgui.Create("DPanel")
     tab1.Paint = function() end -- Оставить пустой метод рисования, чтобы вкладка была прозрачной
-    tabs:AddSheet(cur_table_tr_entity, tab1)
+    tabs:AddSheet(cur_table_tr_weapon, tab1)
        
 
     -- Список текущего оружия игрока
-    local entityList = vgui.Create("DListView", tab1)
-    entityList:SetSize(280, 540)
-    entityList:SetPos(10, 10)
-    entityList:AddColumn("Entities")
+    local weaponList = vgui.Create("DListView", tab1)
+    weaponList:SetSize(280, 540)
+    weaponList:SetPos(10, 10)
+    weaponList:AddColumn("Entities")
         
     
     -- SpawnIcon для выбора оружия
-    local entitySelect = vgui.Create("DPanelSelect", ply.EntityEditor)
-    entitySelect:SetSize(500, 890)
-    entitySelect:SetPos(310, 30)
+    local weaponSelect = vgui.Create("DPanelSelect", ply.WeaponEditor)
+    weaponSelect:SetSize(500, 890)
+    weaponSelect:SetPos(310, 30)
 
-    for _, entity in pairs(items) do -- Показывает имя в списке уже добавленных в замену
-        entityList:AddLine(entity)
+    for _, weapon in pairs(items_swep) do -- Показывает имя в списке уже добавленных в замену
+        weaponList:AddLine(weapon)
     end
 
     -------------------------------------------------------------------------------------------------------------------------
@@ -343,7 +328,7 @@ concommand.Add("open_tr_menu_edit", function(ply, cmd, args)
 
 
 
-    local propscroll = vgui.Create("DScrollPanel", ply.EntityEditor)
+    local propscroll = vgui.Create("DScrollPanel", ply.WeaponEditor)
     propscroll:Dock(FILL)
     propscroll:DockMargin(300, 24, 16, 16)
 
@@ -352,9 +337,9 @@ concommand.Add("open_tr_menu_edit", function(ply, cmd, args)
 
     local Categorised = {}
 
-    local spawnableEntities = list.Get("SpawnableEntities")
+    local spawnmenuWeapons = list.Get("Weapon")
 
-    for k, v in pairs(spawnableEntities) do
+    for k, v in pairs(spawnmenuWeapons) do
         local categ = v.Category or "Other"
 
         if not isstring(categ) then
@@ -369,20 +354,19 @@ concommand.Add("open_tr_menu_edit", function(ply, cmd, args)
         local Header = vgui.Create("ContentHeader", proppanel)
         Header:SetText(CategoryName)
         proppanel:Add(Header)
-
-        for k, SpawnableEntities in SortedPairsByMemberValue(v, "PrintName") do
-            if SpawnableEntities.AdminOnly and not LocalPlayer():IsAdmin() then continue end
+        for k, SpawnmenuWeapons in SortedPairsByMemberValue(v, "PrintName") do
+            if SpawnmenuWeapons.AdminOnly and not LocalPlayer():IsAdmin() or SpawnmenuWeapons.Spawnable == false then continue end
             local icon = vgui.Create("ContentIcon", proppanel)
-            icon:SetMaterial(SpawnableEntities.IconOverride or "entities/" .. SpawnableEntities.ClassName .. ".png")
-            icon:SetName(SpawnableEntities.PrintName or "#" .. SpawnableEntities.ClassName)
-            icon:SetAdminOnly(SpawnableEntities.AdminOnly or false)
+            icon:SetMaterial(SpawnmenuWeapons.IconOverride or "entities/" .. SpawnmenuWeapons.ClassName .. ".png")
+            icon:SetName(SpawnmenuWeapons.PrintName or "#" .. SpawnmenuWeapons.ClassName)
+            icon:SetAdminOnly(SpawnmenuWeapons.AdminOnly or false)
 
             icon.DoClick = function()
                 local chance = 100
-                if not table.HasValue(items, SpawnableEntities.ClassName.. ":"..chance) then
-                    table.insert(items, SpawnableEntities.ClassName.. ":"..chance)
-                    entityList:AddLine(SpawnableEntities.ClassName.. ":"..chance)
-                    WriteItemsFileTR(ply, items)
+                if not table.HasValue(items_swep, SpawnmenuWeapons.ClassName.. ":"..chance) then
+                    table.insert(items_swep, SpawnmenuWeapons.ClassName.. ":"..chance)
+                    weaponList:AddLine(SpawnmenuWeapons.ClassName.. ":"..chance)
+                    WriteItemsFileTR_Weapon(ply, items_swep)
                 end
             end
             icon.DoRightClick = function()
@@ -390,7 +374,7 @@ concommand.Add("open_tr_menu_edit", function(ply, cmd, args)
                 -- Создаем панель (окно) с кнопкой
                 local myPanel = vgui.Create("DFrame")
                 myPanel:SetSize(300, 150)
-                myPanel:SetTitle("Add Entity with chances")
+                myPanel:SetTitle("Add Weapon with chances")
                 myPanel:SetPos(mouseX, mouseY)
                 myPanel:MakePopup()
 
@@ -405,10 +389,10 @@ concommand.Add("open_tr_menu_edit", function(ply, cmd, args)
 
                 myButton.DoClick = function()
                     local chance = textEntry:GetValue()
-                    if not table.HasValue(items, SpawnableEntities.ClassName.. ":"..chance) then
-                        table.insert(items, SpawnableEntities.ClassName.. ":"..chance)
-                        entityList:AddLine(SpawnableEntities.ClassName.. ":"..chance)
-                        WriteItemsFileTR(ply, items)
+                    if not table.HasValue(items_swep, SpawnmenuWeapons.ClassName.. ":"..chance) then
+                        table.insert(items_swep, SpawnmenuWeapons.ClassName.. ":"..chance)
+                        weaponList:AddLine(SpawnmenuWeapons.ClassName.. ":"..chance)
+                        WriteItemsFileTR_Weapon(ply, items_swep)
                     end
                     myPanel:Close()
                 end
@@ -420,28 +404,28 @@ concommand.Add("open_tr_menu_edit", function(ply, cmd, args)
     -------------------------------------------------------------------------------------------------------------------------
     
     -- Кнопка удаления
-    local removeButton = vgui.Create("DButton", ply.EntityEditor)
+    local removeButton = vgui.Create("DButton", ply.WeaponEditor)
     removeButton:SetSize(280, 25)
     removeButton:SetPos(10, 675)
-    removeButton:SetText("Delete selected entity")
+    removeButton:SetText("Delete selected weapon")
     removeButton.DoClick = function()
-        local selectedLine = entityList:GetSelectedLine()
+        local selectedLine = weaponList:GetSelectedLine()
         if selectedLine then
-            table.remove(items, selectedLine)
-            WriteItemsFileTR(ply, items)   
-            entityList:RemoveLine(selectedLine)    
+            table.remove(items_swep, selectedLine)
+            WriteItemsFileTR_Weapon(ply, items_swep)   
+            weaponList:RemoveLine(selectedLine)    
         end
     end
 
     -- Кнопка удаления Всех Записей
-    local removeButtonAll = vgui.Create("DButton", ply.EntityEditor)
+    local removeButtonAll = vgui.Create("DButton", ply.WeaponEditor)
     removeButtonAll:SetSize(100, 25)
     removeButtonAll:SetPos(10, 800)
     removeButtonAll:SetText("Delete ALL!")
     removeButtonAll.DoClick = function()
-        local selectedLine = entityList:GetSelectedLine()
-        table.Empty(items)
-        entityList:Clear()
-        WriteItemsFileTR(ply, items)
+        local selectedLine = weaponList:GetSelectedLine()
+        table.Empty(items_swep)
+        weaponList:Clear()
+        WriteItemsFileTR_Weapon(ply, items_swep)
     end
 end)
