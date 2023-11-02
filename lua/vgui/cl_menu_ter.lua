@@ -19,6 +19,20 @@ hook.Add("PopulateToolMenu", "TER_SettingsPanel", TER_SettingsPaneladd)
 local cur_table_ter_entity = ""
 local items = {}
 
+concommand.Add("tets", function(ply, cmd, args)
+        -- Ваша строка данных
+    local dataString = "название_вашего_энтити, 100"
+
+    -- Разбиваем строку по запятой и удаляем начальные и конечные пробелы
+    local parts = string.Explode(",", dataString)
+    local name_entity = string.Trim(parts[1])
+    local chance_entity = string.Trim(parts[2])
+
+    -- Выводим название энтити
+    print("Название энтити:", name_entity)
+    print("Шанс энтити:", chance_entity)
+end)
+
 concommand.Add("ter_menu", function(ply, cmd, args)
     local spawnmenu_border = GetConVar("spawnmenu_border")
     local MarginX = math.Clamp((ScrW() - 1024) * math.max(0.1, spawnmenu_border:GetFloat()), 25, 256)
@@ -265,8 +279,7 @@ end)
 
 -- Функции для чтения и записи индивидуальных файлов игроков
 local function ReadItemsFileTER(ply)
-    table_entity = cur_table_ter_entity
-    local content = file.Read("total_entity_replacer/" .. table_entity .. ".txt", "DATA")
+    local content = file.Read("total_entity_replacer/" .. cur_table_ter_entity .. ".txt", "DATA")
     if content then
         return util.JSONToTable(content) or {}
     else
@@ -276,19 +289,13 @@ local function ReadItemsFileTER(ply)
 end
 
 local function WriteItemsFileTER(ply, items)
-    table_entity = cur_table_ter_entity
     if not file.Exists("total_entity_replacer", "DATA") then
         -- Чтоб не ругался из-за отсутствия папок и файлов
         file.CreateDir("total_entity_replacer")
         file.Write("total_entity_replacer/item_healthvial.txt", "[]")
     end
-    file.Write("total_entity_replacer/" .. table_entity .. ".txt", util.TableToJSON(items))
+    file.Write("total_entity_replacer/" .. cur_table_ter_entity .. ".txt", util.TableToJSON(items))
 end
-
-
-concommand.Add("tsm", function(ply, cmd, args)
-
-end)
 
 concommand.Add("open_ter_menu_edit", function(ply, cmd, args)
 
@@ -341,7 +348,7 @@ concommand.Add("open_ter_menu_edit", function(ply, cmd, args)
     weaponSelect:SetSize(500, 890)
     weaponSelect:SetPos(310, 30)
 
-    for _, weapon in pairs(items) do
+    for _, weapon in pairs(items) do -- Показывает имя в списке уже добавленных в замену
         weaponList:AddLine(weapon)
     end
 
@@ -385,9 +392,10 @@ concommand.Add("open_ter_menu_edit", function(ply, cmd, args)
             icon:SetAdminOnly(SpawnableEntities.AdminOnly or false)
 
             icon.DoClick = function()
+                local chance = 100
                 if not table.HasValue(items, SpawnableEntities.ClassName) then
-                    table.insert(items, SpawnableEntities.ClassName)
-                    weaponList:AddLine(SpawnableEntities.ClassName)
+                    table.insert(items, SpawnableEntities.ClassName.. ":"..chance)
+                    weaponList:AddLine(SpawnableEntities.ClassName.. ":"..chance)
                     WriteItemsFileTER(ply, items)
                 end
             end

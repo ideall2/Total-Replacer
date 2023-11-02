@@ -87,16 +87,33 @@ hook.Add("OnEntityCreated", "ReplacingEntity", function(ent) -- При созд�
             print("This entity is an NPC.")
         end
         -- Без таймера хрен заработает
+        
         timer.Simple(0.001, function() 
             local randomEntity_table = allRandomEntities[math.random(#allRandomEntities)] 
             local list_entity = ReadItemsFile_TER_entity(ent)
-            local current_entity = list_entity[math.random(#list_entity)]
+            local current_entity = list_entity[math.random(#list_entity)] or randomEntity_table
+            -- Ваша строка данных
             if IsValid(ent) and CheckedEntity_TER(searched_entity) then
-                local newEntity = ents.Create(current_entity or randomEntity_table)
+                -- Разбиваем строку по запятой и удаляем начальные и конечные пробелы
+                
+                local dataString = current_entity
+                local parts = string.Explode(":", dataString)
+                local name_entity = string.Trim(parts[1])
+                local startIndex, endIndex = string.find(dataString, ":")
+                local chance_entity
+                if startIndex then
+                    chance_entity = string.Trim(parts[2])  
+                end
+                print(name_entity)
+                print(chance_entity)
+
+                local newEntity = ents.Create(name_entity)
                 local owner = EntityOwners_TER[ent]
+
                 newEntity:SetPos(ent:GetPos())
                 newEntity:SetAngles(ent:GetAngles())
                 newEntity:Spawn()
+                newEntity:Activate()
                 newEntity:SetOwner(owner)
 
                 local nameEnts = newEntity:GetClass() -- Преобразование в название энтити
@@ -110,8 +127,11 @@ hook.Add("OnEntityCreated", "ReplacingEntity", function(ent) -- При созд�
         end)
     end
     -- Проверка того, что энтити есть в списке Заменяемых а также разрешено ли заменять его
-    if CheckedEntity_TER() and GetConVar("ter_"..ent:GetClass()):GetBool() == true then
-        ReplacingEntity_TER(ent)
+    local chance_to_create_ent = math.random(0, 100)
+    if chance_to_create_ent >= 1 then
+        if CheckedEntity_TER() and GetConVar("ter_"..ent:GetClass()):GetBool() == true then
+            ReplacingEntity_TER(ent)
+        end
     end
 end)
 
