@@ -38,6 +38,33 @@ local npcList = {
     "npc_seagull",
     "npc_metropolice",
 }
+local combine_models = {
+    "models/Combine_Soldier.mdl",
+    "models/combine_soldier_prisonguard.mdl",
+    "models/combine_super_soldier.mdl",
+}
+
+local rebels_models = {
+    "models/Humans/Group03/Female_01.mdl",
+    "models/Humans/Group03/Female_02.mdl",
+    "models/Humans/Group03/Female_03.mdl",
+    "models/Humans/Group03/Female_04.mdl",
+    "models/Humans/Group03/Female_05.mdl",
+    "models/Humans/Group03/Female_06.mdl",
+    "models/Humans/Group03/Female_07.mdl",
+    "models/Humans/Group03/Male_01.mdl",
+    "models/Humans/Group03/Male_02.mdl",
+    "models/Humans/Group03/Male_03.mdl",
+    "models/Humans/Group03/Male_04.mdl",
+    "models/Humans/Group03/Male_06.mdl",
+    "models/Humans/Group03/Male_07.mdl",
+    "models/Humans/Group03/Male_08.mdl",
+    "models/Humans/Group03/Male_09.mdl",
+}
+
+local npcWeaponizedList = {
+    "npc_metropolice",
+}
 
 
 
@@ -55,8 +82,8 @@ end
 
 EntityOwners_TR = EntityOwners_TR or {}
 NPCOwners_TR = NPCOwners_TR or {} 
--- Глобальная переменная. Очень долго не мог додуматься, как доебаться до создателя.
- -- Без него нельзя присвоить создателя, а если без него, то спавнится сразу 2 энтити.
+    -- Глобальная переменная. Очень долго не мог додуматься, как доебаться до создателя.
+    -- Все это нужно для получения игрока создателя и присваиванию новому энтити и удаление gmod_undo.
  -- ДА СУКА. Я доебался до него!
  -- Благодаря глобальной переменной я смог вызвать таблицу в нужном месте
 hook.Add("PlayerSpawnedSENT", "SavingOwnerEntity", function(ply,ent) -- Тот самый хук который берет создателя при спавне энтити из спавнменю
@@ -148,13 +175,14 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
             ------------------------ Общее
     local allNPC = list.Get("NPC") -- Получает весь список энтити из спавнменю которое есть в игре (И даже недоступные для спавна)
     local allRandomNPC = {} -- Списко для Всех случайных оружий
+    
     for k, v in pairs(allNPC) do
         table.insert(allRandomNPC, k)
     end
         -- Функция нужна для определия, есть ли из списка npcList то, что заспавнилось
         local function CheckedNPC_TR(searched_npc) 
-            local nameEnts = ent:GetClass()
-            local targetString = nameEnts
+            local nameNPC = ent:GetClass()
+            local targetString = nameNPC
     
             -- Флаг для отслеживания, была ли найдена нужная строка
             local stringFound = false
@@ -182,44 +210,112 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
     local function ReplacingNPC_TR(ent)
         if ent:IsNPC() and IsValid(ent) and CheckedNPC_TR(searched_npc) then -- Ничто кроме NPC
             -- Без таймера хрен заработает
-            timer.Simple(0.01, function()
+            timer.Simple(0.001, function()
                 if IsValid(ent) and CheckedNPC_TR(searched_npc) and not ent:GetOwner():IsPlayer() and not ent:GetOwner():IsNPC() then
                     while true do
                         ---- Перебор, преобразование строк в нужный формат
                         local randomNPC_table = allRandomNPC[math.random(#allRandomNPC)] 
                         local list_npc = ReadItemsFile_TR_npc(ent)
-                        local current_npc = list_npc[math.random(#list_npc)] or randomNPC_table
-                        ---- Обработка строки: запись выглядит примерно так: "sent_ball:100". sent_ball - имя энтити
-                        ---- и 100 - шанс выпадения. Двоиточие разделяет. Но без обработки она как одна строка.
-                        ---- Дальше идет разделение с условием. Результаты в name_npc и chance_npc. Если только имя 
+                        local random_npc = list_npc[math.random(#list_npc)] or randomNPC_table
+                        ---- Обработка строки: запись выглядит примерно так: "npc_citizen:100:weapon_pistol". npc_citizen - имя НПС
+                        ---- 100 - шанс выпадения_, а weapon_pistol - оружие. Двоиточие разделяет. Но без обработки она как одна строка.
+                        ---- Дальше идет разделение с условием. Результаты в name_npc и chance_npc, а также weapon_npc.
                         ---- То просто имя будет и все
-                        local dataString = current_npc
-                        local parts = string.Explode(":", dataString)
-                        local name_npc = string.Trim(parts[1])
-                        local startIndex, endIndex = string.find(dataString, ":")
+                        local dataString = random_npc
+                        
+                        local pattern = "([^:]+):([^:]+):([^:]+)"
+                        local name_npc, chance_npc, weapon_npc = string.match(dataString, pattern)
                         local chance_npc = 100
-                        if startIndex then
-                            chance_npc = tonumber(string.Trim(parts[2])) -- Преобразование строки в число
+                        if weapon_npc == "" then -- Если у НПС нет оружия то автоматом присваивает пустые руки для нпс
+                            weapon_npc = "weapon_empty_hands"
                         end
                         ---- Конец
 
-
                         ------------------- Шанс
+                        local modelNPC = ""
                         local chance = math.random(1, 100)
                         if chance <= chance_npc then
-                            local newNPC = ents.Create(name_npc)
+                            ---- Огромнейший кусок кода для фильтрации. Из-за содержащихся в НПС имена типа Rebel, Medic, CombineElite и тд
+                            ---- Все бы ничего, но напрямую такие имена не вставить. Иначе послан нахуй консолью, что такого имени НПС нет
+                            ---- Вот этот код ТОТАЛЬНО фильтрует и присваивает уникальные значения для таких имен.
+                            local class_npc = ""
+                            if random_npc == "Rebel" or name_npc == "Rebel" then
+                                newNPC = ents.Create("npc_citizen")
+                                newNPC:SetKeyValue("citizentype", 3)
+                                newNPC:SetKeyValue("additionalequipment", weapon_npc)
+                                newNPC:SetKeyValue("classname", "Rebel")
+                                modelNPC = rebels_models[math.random(#rebels_models)]
+                                newNPC:SetModel(modelNPC)
+                            elseif random_npc == "Medic" or name_npc == "Medic" then
+                                newNPC = ents.Create("npc_citizen")
+                                newNPC:SetKeyValue("spawnflags", "131072")
+                                newNPC:SetKeyValue("citizentype", 3)
+                                newNPC:SetKeyValue("classname", "Rebel Medic")
+                                newNPC:SetKeyValue("additionalequipment", weapon_npc)
+                                modelNPC = rebels_models[math.random(#rebels_models)]
+                            elseif random_npc == "Refugee" or name_npc == "Refugee" then
+                                newNPC = ents.Create("npc_citizen")
+                                newNPC:SetKeyValue("citizentype", 2)
+                                newNPC:SetKeyValue("additionalequipment", weapon_npc)
+                                newNPC:SetKeyValue("classname", "Refugee")
+                                modelNPC = rebels_models[math.random(#rebels_models)]
+                            elseif random_npc == "CombineElite" or name_npc == "CombineElite" then
+                                newNPC = ents.Create("npc_combine_s")
+                                modelNPC = "models/combine_super_soldier.mdl"
+                                newNPC:SetKeyValue("additionalequipment", weapon_npc)
+                                newNPC:SetKeyValue("NumGrenades", 20)
+                                newNPC:SetKeyValue("classname", "Combine Elite")
+                                newNPC:SetModel(modelNPC)
+                            elseif random_npc == "CombinePrison" or name_npc == "CombinePrison" then
+                                newNPC = ents.Create("npc_combine_s")
+                                modelNPC = "models/combine_soldier_prisonguard.mdl"
+                                newNPC:SetKeyValue("additionalequipment", weapon_npc)
+                                newNPC:SetKeyValue("NumGrenades", 20)
+                                newNPC:SetKeyValue("classname", "Prison Guard")
+                                newNPC:SetModel(modelNPC)
+                            elseif random_npc == "PrisonShotgunner" or name_npc == "PrisonShotgunner" then
+                                newNPC = ents.Create("npc_combine_s")
+                                modelNPC = "models/combine_soldier_prisonguard.mdl"
+                                newNPC:SetKeyValue("additionalequipment", weapon_npc)
+                                newNPC:SetKeyValue("NumGrenades", 20)
+                                newNPC:SetKeyValue("classname", "Prison Shotgun Guard")
+                                newNPC:SetModel(modelNPC)
+                            elseif random_npc == "ShotgunSoldier" or name_npc == "ShotgunSoldier" then
+                                newNPC = ents.Create("npc_combine_s")
+                                modelNPC = "models/Combine_Soldier.mdl"
+                                newNPC:SetKeyValue("additionalequipment", weapon_npc)
+                                newNPC:SetKeyValue("NumGrenades", 20)
+                                newNPC:SetKeyValue("classname", "Shotgun Soldier")
+                                newNPC:SetModel(modelNPC)
+                            elseif random_npc == "VortigauntSlave" or name_npc == "VortigauntSlave" then
+                                newNPC = ents.Create("npc_vortigaunt")
+                                modelNPC = "models/vortigaunt_slave.mdl"
+                                newNPC:SetKeyValue("classname", "Vortigaunt Slave")
+                                newNPC:SetModel(modelNPC)
+                            elseif random_npc == "npc_odessa" or name_npc == "npc_odessa" then
+                                newNPC = ents.Create("npc_citizen")
+                                newNPC:SetKeyValue("citizentype", 4)
+                                modelNPC = "models/odessa.mdl"
+                                newNPC:SetKeyValue("classname", "Odessa Cubbage")
+                                newNPC:SetModel(modelNPC)
+                            else
+                                newNPC = ents.Create(name_npc or random_npc) ---- Стандартная замена, если не было отфильтрованно
+                                -- newNPC:SetKeyValue("additionalequipment", weapon_npc)
+                            end
+
                             local owner = NPCOwners_TR[ent]
 
+                            -- if CheckedNPC_TR() == newNPC:GetClass() then
+                            --     print("Появился одинаковый НПС")
+                            -- end
+                            -- local newNPC = ents.Create("npc_citizen")
                             newNPC:SetPos(ent:GetPos())
                             newNPC:SetAngles(ent:GetAngles())
                             newNPC:Spawn()
                             newNPC:Activate()
-                            newNPC:Give()
-                            newNPC:SetOwner(owner)
-
+                        
                             local nameEnts = newNPC:GetClass() -- Преобразование в название энтити
                             local undoName = "Replaced NPC: "..nameEnts -- Удаляемое имя и конкретное название энтити
-                            print(undoName)
                             undo.Create(undoName) -- Все для работы с Undo и соответсвенно с Z клавишей
                             undo.AddEntity(newNPC) -- Все для работы с Undo и соответсвенно с Z клавишей
                             undo.SetPlayer(owner) -- Присваивание игроку предмет
@@ -232,6 +328,7 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
                     end
                 end
             end)
+            
         end
     end
     -- Проверка того, что энтити есть в списке Заменяемых а также разрешено ли заменять его
