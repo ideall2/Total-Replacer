@@ -172,10 +172,6 @@ end)
 hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
     if GetConVar("tr_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена
     if not table.HasValue(npcList, ent:GetClass()) then return end -- Нужно чтобы код не выполнялся если нет нужного энтити
-    -- local OldActiveWeapon = ent:GetActiveWeapon()
-    -- local weaponClass = OldActiveWeapon:GetClass()
-    -- print(weaponClass)
-    -- print(ent)
 
             ------------------------ Общее
     local allNPC = list.Get("NPC") -- Получает весь список энтити из спавнменю которое есть в игре (И даже недоступные для спавна)
