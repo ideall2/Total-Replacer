@@ -172,13 +172,20 @@ end)
 hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
     if GetConVar("tr_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена
     if not table.HasValue(npcList, ent:GetClass()) then return end -- Нужно чтобы код не выполнялся если нет нужного энтити
+    -- local OldActiveWeapon = ent:GetActiveWeapon()
+    -- local weaponClass = OldActiveWeapon:GetClass()
+    -- print(weaponClass)
+    -- print(ent)
+
             ------------------------ Общее
     local allNPC = list.Get("NPC") -- Получает весь список энтити из спавнменю которое есть в игре (И даже недоступные для спавна)
     local allRandomNPC = {} -- Списко для Всех случайных оружий
+
     
     for k, v in pairs(allNPC) do
         table.insert(allRandomNPC, k)
     end
+        -- print(ent:GetActiveWeapon())
         -- Функция нужна для определия, есть ли из списка npcList то, что заспавнилось
         local function CheckedNPC_TR(searched_npc) 
             local nameNPC = ent:GetClass()
@@ -210,13 +217,15 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
     local function ReplacingNPC_TR(ent)
         if ent:IsNPC() and IsValid(ent) and CheckedNPC_TR(searched_npc) then -- Ничто кроме NPC
             -- Без таймера хрен заработает
-            timer.Simple(0.001, function()
+            timer.Simple(0.02, function()
                 if IsValid(ent) and CheckedNPC_TR(searched_npc) and not ent:GetOwner():IsPlayer() and not ent:GetOwner():IsNPC() then
                     while true do
                         ---- Перебор, преобразование строк в нужный формат
                         local randomNPC_table = allRandomNPC[math.random(#allRandomNPC)] 
                         local list_npc = ReadItemsFile_TR_npc(ent)
                         local random_npc = list_npc[math.random(#list_npc)] or randomNPC_table
+
+
                         ---- Обработка строки: запись выглядит примерно так: "npc_citizen:100:weapon_pistol". npc_citizen - имя НПС
                         ---- 100 - шанс выпадения_, а weapon_pistol - оружие. Двоиточие разделяет. Но без обработки она как одна строка.
                         ---- Дальше идет разделение с условием. Результаты в name_npc и chance_npc, а также weapon_npc.
@@ -226,9 +235,7 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
                         local pattern = "([^:]+):([^:]+):([^:]+)"
                         local name_npc, chance_npc, weapon_npc = string.match(dataString, pattern)
                         local chance_npc = 100
-                        if weapon_npc == "" then -- Если у НПС нет оружия то автоматом присваивает пустые руки для нпс
-                            weapon_npc = "weapon_empty_hands"
-                        end
+                        
                         ---- Конец
 
                         ------------------- Шанс
@@ -242,7 +249,6 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
                             if random_npc == "Rebel" or name_npc == "Rebel" then
                                 newNPC = ents.Create("npc_citizen")
                                 newNPC:SetKeyValue("citizentype", 3)
-                                newNPC:SetKeyValue("additionalequipment", weapon_npc)
                                 newNPC:SetKeyValue("classname", "Rebel")
                                 modelNPC = rebels_models[math.random(#rebels_models)]
                                 newNPC:SetModel(modelNPC)
@@ -251,39 +257,33 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
                                 newNPC:SetKeyValue("spawnflags", "131072")
                                 newNPC:SetKeyValue("citizentype", 3)
                                 newNPC:SetKeyValue("classname", "Rebel Medic")
-                                newNPC:SetKeyValue("additionalequipment", weapon_npc)
                                 modelNPC = rebels_models[math.random(#rebels_models)]
                             elseif random_npc == "Refugee" or name_npc == "Refugee" then
                                 newNPC = ents.Create("npc_citizen")
                                 newNPC:SetKeyValue("citizentype", 2)
-                                newNPC:SetKeyValue("additionalequipment", weapon_npc)
                                 newNPC:SetKeyValue("classname", "Refugee")
                                 modelNPC = rebels_models[math.random(#rebels_models)]
                             elseif random_npc == "CombineElite" or name_npc == "CombineElite" then
                                 newNPC = ents.Create("npc_combine_s")
                                 modelNPC = "models/combine_super_soldier.mdl"
-                                newNPC:SetKeyValue("additionalequipment", weapon_npc)
                                 newNPC:SetKeyValue("NumGrenades", 20)
                                 newNPC:SetKeyValue("classname", "Combine Elite")
                                 newNPC:SetModel(modelNPC)
                             elseif random_npc == "CombinePrison" or name_npc == "CombinePrison" then
                                 newNPC = ents.Create("npc_combine_s")
                                 modelNPC = "models/combine_soldier_prisonguard.mdl"
-                                newNPC:SetKeyValue("additionalequipment", weapon_npc)
                                 newNPC:SetKeyValue("NumGrenades", 20)
                                 newNPC:SetKeyValue("classname", "Prison Guard")
                                 newNPC:SetModel(modelNPC)
                             elseif random_npc == "PrisonShotgunner" or name_npc == "PrisonShotgunner" then
                                 newNPC = ents.Create("npc_combine_s")
                                 modelNPC = "models/combine_soldier_prisonguard.mdl"
-                                newNPC:SetKeyValue("additionalequipment", weapon_npc)
                                 newNPC:SetKeyValue("NumGrenades", 20)
                                 newNPC:SetKeyValue("classname", "Prison Shotgun Guard")
                                 newNPC:SetModel(modelNPC)
                             elseif random_npc == "ShotgunSoldier" or name_npc == "ShotgunSoldier" then
                                 newNPC = ents.Create("npc_combine_s")
                                 modelNPC = "models/Combine_Soldier.mdl"
-                                newNPC:SetKeyValue("additionalequipment", weapon_npc)
                                 newNPC:SetKeyValue("NumGrenades", 20)
                                 newNPC:SetKeyValue("classname", "Shotgun Soldier")
                                 newNPC:SetModel(modelNPC)
@@ -300,15 +300,13 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
                                 newNPC:SetModel(modelNPC)
                             else
                                 newNPC = ents.Create(name_npc or random_npc) ---- Стандартная замена, если не было отфильтрованно
-                                -- newNPC:SetKeyValue("additionalequipment", weapon_npc)
                             end
 
                             local owner = NPCOwners_TR[ent]
-
-                            -- if CheckedNPC_TR() == newNPC:GetClass() then
-                            --     print("Появился одинаковый НПС")
+                            print(weapon_npc)
+                            -- if weapon_npc != NULL then
+                            --     newNPC:SetKeyValue("additionalequipment", weapon_npc)
                             -- end
-                            -- local newNPC = ents.Create("npc_citizen")
                             newNPC:SetPos(ent:GetPos())
                             newNPC:SetAngles(ent:GetAngles())
                             newNPC:Spawn()
@@ -336,6 +334,7 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
             ReplacingNPC_TR(ent)
         end
 end)
+
 
 hook.Add("OnEntityCreated", "ReplacingEntity", function(ent) -- При создании энтити тотально проверяет а также заполняет таблицы со всеми энтити(пока только из вкладки Энтити)
     if GetConVar("tr_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена
@@ -444,4 +443,3 @@ hook.Add("OnEntityCreated", "ReplacingEntity", function(ent) -- При созд�
             ReplacingEntity_TR(ent)
         end
 end)
-
