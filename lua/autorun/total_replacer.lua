@@ -37,6 +37,7 @@ local npcList = {
     "npc_pigeon",
     "npc_seagull",
     "npc_metropolice",
+    "npc_combine_s"
 }
 local combine_models = {
     "models/Combine_Soldier.mdl",
@@ -49,7 +50,6 @@ local rebels_models = {
     "models/Humans/Group03/Female_02.mdl",
     "models/Humans/Group03/Female_03.mdl",
     "models/Humans/Group03/Female_04.mdl",
-    "models/Humans/Group03/Female_05.mdl",
     "models/Humans/Group03/Female_06.mdl",
     "models/Humans/Group03/Female_07.mdl",
     "models/Humans/Group03/Male_01.mdl",
@@ -66,6 +66,25 @@ local npcWeaponizedList = {
     "npc_metropolice",
 }
 
+-- Функция для замены оружия у НПС
+local standartWeaponNPC = {
+    "weapon_pistol",
+    "weapon_357",
+    "weapon_smg1",
+    "weapon_ar2",
+    "weapon_shotgun",
+    "weapon_crossbow",
+    "weapon_crowbar",
+    "weapon_stunstick",
+    "weapon_rpg",
+}
+
+local ExceptionsNPCWeapon = {
+    "npc_crow",
+    "npc_pigeon",
+    "npc_seagull",
+    "npc_zombie"
+}
 
 
 for _, str in pairs(entityList) do -- Создает консольные команды для ограничения спавна энтити
@@ -169,35 +188,53 @@ hook.Add( "WeaponEquip", "WeaponReplaced", function( weapon, ply )
     end
 end)
 
+local allNPCWeapons = list.Get("NPCUsableWeapons") -- Получает весь список энтити из спавнменю которое есть в игре (И даже недоступные для спавна)
+local allNPCWeapons_Random = {} -- Списко для Всех случайных оружий
+local allNPC = list.Get("NPC") -- Получает весь список энтити из спавнменю которое есть в игре (И даже недоступные для спавна)
+local allRandomNPC = {} -- Списко для Всех случайных оружий
+
 hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
     if GetConVar("tr_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена
     if not table.HasValue(npcList, ent:GetClass()) then return end -- Нужно чтобы код не выполнялся если нет нужного энтити
 
             ------------------------ Общее
-    local allNPC = list.Get("NPC") -- Получает весь список энтити из спавнменю которое есть в игре (И даже недоступные для спавна)
-    local allRandomNPC = {} -- Списко для Всех случайных оружий
+
 
     
     for k, v in pairs(allNPC) do
         table.insert(allRandomNPC, k)
     end
-        -- print(ent:GetActiveWeapon())
-        -- Функция нужна для определия, есть ли из списка npcList то, что заспавнилось
-        local function CheckedNPC_TR(searched_npc) 
-            local nameNPC = ent:GetClass()
-            local targetString = nameNPC
-    
-            -- Флаг для отслеживания, была ли найдена нужная строка
-            local stringFound = false
-            -- Перебор списка строк и поиск нужной строки
-            for _, str in pairs(npcList) do
-                if str == targetString then
-                    stringFound = true
-                    searched_npc = targetString
-                    return searched_npc
-                end
+    local function CheckedNPC_TR(searched_npc) 
+        local nameNPC = ent:GetClass()
+        local targetString = nameNPC
+
+        -- Флаг для отслеживания, была ли найдена нужная строка
+        local stringFound = false
+        -- Перебор списка строк и поиск нужной строки
+        for _, str in pairs(npcList) do
+            if str == targetString then
+                stringFound = true
+                searched_npc = targetString
+                return searched_npc
             end
         end
+    end
+    local function CheckedNPCWeaponException_TR(exception_npc) 
+        local nameNPC = ent:GetClass()
+        local targetString = nameNPC
+
+        -- Флаг для отслеживания, была ли найдена нужная строка
+        local stringFound = false
+        -- Перебор списка строк и поиск нужной строки
+        for _, str in pairs(ExceptionsNPCWeapon) do
+            if str != targetString then
+                stringFound = true
+                exception_npc = targetString
+                return true
+            end
+        end
+        return false
+    end
     
     ------ Функиции для чтения с разных таблиц из папки data
     local function ReadItemsFile_TR_npc(ent, ply)
@@ -209,19 +246,57 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
         end
     end
 
+    local function ReadItemsFile_TR_npcweapon(ent, ply)
+        if ent:IsNPC() and ent:GetClass() then
+            local ActiveWeapon = ""
+            if ent:GetActiveWeapon() != NULL then
+                print("У этого нпс нет оружия")
+                ActiveWeapon = ent:GetActiveWeapon():GetClass()
+            end
+
+            local content = file.Read("total_npcweapon_replacer/"..ActiveWeapon.. ".txt", "DATA")
+            if content then
+                return util.JSONToTable(content) or {}
+            else
+                return {}
+            end
+        end
+    end
     -- Функция замены энтити при спавне, а также выдача прав с возможностью удаления с помощью Z если было заспавнено через спавнменю
     local function ReplacingNPC_TR(ent)
         if ent:IsNPC() and IsValid(ent) and CheckedNPC_TR(searched_npc) then -- Ничто кроме NPC
             -- Без таймера хрен заработает
-            timer.Simple(0.02, function()
+            timer.Simple(0.01, function()
                 if IsValid(ent) and CheckedNPC_TR(searched_npc) and not ent:GetOwner():IsPlayer() and not ent:GetOwner():IsNPC() then
                     while true do
-                        ---- Перебор, преобразование строк в нужный формат
+                        for k, v in pairs(allNPCWeapons) do
+                            local weaponClass = v.class
+                            table.insert(allNPCWeapons_Random, weaponClass)
+                        end
+                        local RandNPCWeapon = allNPCWeapons_Random[math.random(#allNPCWeapons_Random)]
+                        local RandNPCWeaponReady = (RandNPCWeapon..":".."100")
+                        local ContentNPCWeapons = ReadItemsFile_TR_npcweapon(ent)
+                        local ContentNPC_RandWeapon = ContentNPCWeapons[math.random(#ContentNPCWeapons)] or RandNPCWeaponReady
+
+                        local OldNameWeapon = ""
+                        if ent:GetActiveWeapon() != NULL then
+                            OldNameWeapon = ent:GetActiveWeapon():GetClass()
+                        end
+
+
+                        local weapon_npc_pattern = "([^:]+):([^:]+)"
+                        local name_weapon, chance_npc_weapon_str = string.match(ContentNPC_RandWeapon, weapon_npc_pattern)
+                        if not name_weapon then -- Если не будет получено значение из строк из DATA то оно вставит случайное оружие.
+                            name_weapon = ContentNPC_RandWeapon
+                        end
+
+                        local chance_npc_weapon = tonumber(chance_npc_weapon_str) -- Преобразование строки в число 
+
+
                         local randomNPC_table = allRandomNPC[math.random(#allRandomNPC)] 
                         local list_npc = ReadItemsFile_TR_npc(ent)
-                        local random_npc = list_npc[math.random(#list_npc)] or randomNPC_table
-
-
+                        local randomNPC_table_ready = (randomNPC_table..":".."100:".."weapon_ar2")
+                        local random_npc = list_npc[math.random(#list_npc)] or randomNPC_table_ready
                         ---- Обработка строки: запись выглядит примерно так: "npc_citizen:100:weapon_pistol". npc_citizen - имя НПС
                         ---- 100 - шанс выпадения_, а weapon_pistol - оружие. Двоиточие разделяет. Но без обработки она как одна строка.
                         ---- Дальше идет разделение с условием. Результаты в name_npc и chance_npc, а также weapon_npc.
@@ -229,11 +304,11 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
                         local dataString = random_npc
                         
                         local pattern = "([^:]+):([^:]+):([^:]+)"
-                        local name_npc, chance_npc, weapon_npc = string.match(dataString, pattern)
-                        local chance_npc = 100
+                        local name_npc, chance_npc_str, weapon_npc = string.match(dataString, pattern)
+                        local chance_npc = tonumber(chance_npc_str)
+
                         
                         ---- Конец
-
                         ------------------- Шанс
                         local modelNPC = ""
                         local chance = math.random(1, 100)
@@ -299,15 +374,25 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
                             end
 
                             local owner = NPCOwners_TR[ent]
-                            print(weapon_npc)
-                            -- if weapon_npc != NULL then
-                            --     newNPC:SetKeyValue("additionalequipment", weapon_npc)
-                            -- end
+
+                            local targetString = newNPC:GetClass()
+                    
+                            for _, str in ipairs(ExceptionsNPCWeapon) do
+                                local isBlacklisted = false
+                                for _, blacklistedItem in ipairs(ExceptionsNPCWeapon) do
+                                    if targetString == blacklistedItem then
+                                        isBlacklisted = true
+                                        break
+                                    end
+                                end
+                                if not isBlacklisted and ent:GetActiveWeapon() != NULL then
+                                    newNPC:Give(name_weapon)
+                                end
+                            end
                             newNPC:SetPos(ent:GetPos())
                             newNPC:SetAngles(ent:GetAngles())
                             newNPC:Spawn()
                             newNPC:Activate()
-                        
                             local nameEnts = newNPC:GetClass() -- Преобразование в название энтити
                             local undoName = "Replaced NPC: "..nameEnts -- Удаляемое имя и конкретное название энтити
                             undo.Create(undoName) -- Все для работы с Undo и соответсвенно с Z клавишей
@@ -370,18 +455,6 @@ hook.Add("OnEntityCreated", "ReplacingEntity", function(ent) -- При созд�
 
     -- Функция замены энтити при спавне, а также выдача прав с возможностью удаления с помощью Z если было заспавнено через спавнменю
     local function ReplacingEntity_TR(ent)
-        -- Проверка, является ли энтити транспортом
-        -- if ent:IsVehicle() then
-        --     print("This entity is a vehicle.")
-        -- end
-
-        -- -- Проверка, является ли энтити оружием
-        -- if ent:IsWeapon() then
-        --     print("This entity is a weapon.")
-        -- end
-
-        -- Проверка, является ли энтити НПС
-        
         if not ent:IsNPC() and not ent:IsWeapon() and not ent:IsVehicle() then -- Ничто кроме из вкладки entity 
             -- Без таймера хрен заработает
             timer.Simple(0.0001, function()
