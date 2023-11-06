@@ -112,17 +112,19 @@ hook.Add("PlayerSpawnedNPC", "SavingOwnerNPC", function(ply,ent) -- Тот са�
     NPCOwners_TR[ent] = ply
 end)
 
+local allWeapons = list.Get("Weapon") -- Получает весь список энтити из спавнменю которое есть в игре (И даже недоступные для спавна)
+local allRandomWeapons = {} -- Списко для Всех случайных оружий
+for k, v in pairs(allWeapons) do
+    if v.Spawnable then
+        table.insert(allRandomWeapons, k)
+    end
+end
+
 hook.Add( "WeaponEquip", "WeaponReplaced", function( weapon, ply )
     if GetConVar("tr_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена
     if not table.HasValue(weaponList, weapon:GetClass()) then return end -- Нужно чтобы код не выполнялся если нет нужного энтити
     ------------------------ Общее
-    local allWeapons = list.Get("Weapon") -- Получает весь список энтити из спавнменю которое есть в игре (И даже недоступные для спавна)
-    local allRandomWeapons = {} -- Списко для Всех случайных оружий
-    for k, v in pairs(allWeapons) do
-        if v.Spawnable then
-            table.insert(allRandomWeapons, k)
-        end
-    end
+
     -- Функция нужна для определия, есть ли из списка weaponList то, что заспавнилось
     local function CheckedWeapon_TR(searched_weapon) 
         local nameEnts = weapon:GetClass()
@@ -191,19 +193,19 @@ end)
 local allNPCWeapons = list.Get("NPCUsableWeapons") -- Получает весь список энтити из спавнменю которое есть в игре (И даже недоступные для спавна)
 local allNPCWeapons_Random = {} -- Списко для Всех случайных оружий
 local allNPC = list.Get("NPC") -- Получает весь список энтити из спавнменю которое есть в игре (И даже недоступные для спавна)
-local allRandomNPC = {} -- Списко для Всех случайных оружий
+
+for key, value in pairs(allNPC) do
+    local Class_weapon = value["Class"]
+    print(Class_weapon)
+end
+
 
 hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
     if GetConVar("tr_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена
     if not table.HasValue(npcList, ent:GetClass()) then return end -- Нужно чтобы код не выполнялся если нет нужного энтити
 
-            ------------------------ Общее
-
 
     
-    for k, v in pairs(allNPC) do
-        table.insert(allRandomNPC, k)
-    end
     local function CheckedNPC_TR(searched_npc) 
         local nameNPC = ent:GetClass()
         local targetString = nameNPC
@@ -250,7 +252,6 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
         if ent:IsNPC() and ent:GetClass() then
             local ActiveWeapon = ""
             if ent:GetActiveWeapon() != NULL then
-                print("У этого нпс нет оружия")
                 ActiveWeapon = ent:GetActiveWeapon():GetClass()
             end
 
@@ -273,133 +274,68 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
                             local weaponClass = v.class
                             table.insert(allNPCWeapons_Random, weaponClass)
                         end
-                        local RandNPCWeapon = allNPCWeapons_Random[math.random(#allNPCWeapons_Random)]
-                        local RandNPCWeaponReady = (RandNPCWeapon..":".."100")
-                        local ContentNPCWeapons = ReadItemsFile_TR_npcweapon(ent)
-                        local ContentNPC_RandWeapon = ContentNPCWeapons[math.random(#ContentNPCWeapons)] or RandNPCWeaponReady
+                        -- local RandNPCWeapon = allNPCWeapons_Random[math.random(#allNPCWeapons_Random)]
+                        -- local RandNPCWeaponReady = (RandNPCWeapon..":".."100")
+                        -- local ContentNPCWeapons = ReadItemsFile_TR_npcweapon(ent)
+                        -- local ContentNPC_RandWeapon = ContentNPCWeapons[math.random(#ContentNPCWeapons)] or RandNPCWeaponReady
 
-                        local OldNameWeapon = ""
-                        if ent:GetActiveWeapon() != NULL then
-                            OldNameWeapon = ent:GetActiveWeapon():GetClass()
+                        -- local OldNameWeapon = ""
+                        -- if ent:GetActiveWeapon() != NULL then
+                        --     OldNameWeapon = ent:GetActiveWeapon():GetClass()
+                        -- end
+
+                        -- local RandNPC = allNPC[math.random(#allNPC)]
+                        local RandomFromAllNPC = table.Random(allNPC)
+                        print(RandomFromAllNPC.Category)
+                        if RandomFromAllNPC.Model then
+                            print("Model Is: "..RandomFromAllNPC.Model)
                         end
-
-
-                        local weapon_npc_pattern = "([^:]+):([^:]+)"
-                        local name_weapon, chance_npc_weapon_str = string.match(ContentNPC_RandWeapon, weapon_npc_pattern)
-                        if not name_weapon then -- Если не будет получено значение из строк из DATA то оно вставит случайное оружие.
-                            name_weapon = ContentNPC_RandWeapon
+                        if RandomFromAllNPC.Class then
+                            print("NPC Class Is: "..RandomFromAllNPC.Class)
                         end
+                        if RandomFromAllNPC.Weapons then
+                            PrintTable(RandomFromAllNPC.Weapons)
+                            -- local RandWeaponNPC = table.Random(RandomFromAllNPC.Weapons)
+                            -- print(RandWeaponNPC)
+                        end
+                        if RandomFromAllNPC.SpawnFlags then
+                            print(RandomFromAllNPC.SpawnFlags)
+                        end
+                        -- print(Class_NPC)
 
-                        local chance_npc_weapon = tonumber(chance_npc_weapon_str) -- Преобразование строки в число 
+
+                        -- local randomIndex = math.random(1, #allNPC)
+                        -- local randomValue = allNPC[randomIndex]
+                        -- PrintTable(allNPC)
+                        -- local table_RandNPC = RandNPC[Class]
+                        -- print(table_RandNPC)
+
+                        -- local weapon_npc_pattern = "([^:]+):([^:]+)"
+                        -- local name_weapon, chance_npc_weapon_str = string.match(ContentNPC_RandWeapon, weapon_npc_pattern)
+                        -- if not name_weapon then -- Если не будет получено значение из строк из DATA то оно вставит случайное оружие.
+                        --     name_weapon = ContentNPC_RandWeapon
+                        -- end
+
+                        local chance_npc = 100
 
 
-                        local randomNPC_table = allRandomNPC[math.random(#allRandomNPC)] 
-                        local list_npc = ReadItemsFile_TR_npc(ent)
-                        local randomNPC_table_ready = (randomNPC_table..":".."100:".."weapon_ar2")
-                        local random_npc = list_npc[math.random(#list_npc)] or randomNPC_table_ready
-                        ---- Обработка строки: запись выглядит примерно так: "npc_citizen:100:weapon_pistol". npc_citizen - имя НПС
-                        ---- 100 - шанс выпадения_, а weapon_pistol - оружие. Двоиточие разделяет. Но без обработки она как одна строка.
-                        ---- Дальше идет разделение с условием. Результаты в name_npc и chance_npc, а также weapon_npc.
-                        ---- То просто имя будет и все
-                        local dataString = random_npc
-                        
-                        local pattern = "([^:]+):([^:]+):([^:]+)"
-                        local name_npc, chance_npc_str, weapon_npc = string.match(dataString, pattern)
-                        local chance_npc = tonumber(chance_npc_str)
-
-                        
-                        ---- Конец
-                        ------------------- Шанс
-                        local modelNPC = ""
+                        -- ------------------- Шанс
                         local chance = math.random(1, 100)
                         if chance <= chance_npc then
-                            ---- Огромнейший кусок кода для фильтрации. Из-за содержащихся в НПС имена типа Rebel, Medic, CombineElite и тд
-                            ---- Все бы ничего, но напрямую такие имена не вставить. Иначе послан нахуй консолью, что такого имени НПС нет
-                            ---- Вот этот код ТОТАЛЬНО фильтрует и присваивает уникальные значения для таких имен.
-                            local class_npc = ""
-                            if random_npc == "Rebel" or name_npc == "Rebel" then
-                                newNPC = ents.Create("npc_citizen")
-                                newNPC:SetKeyValue("citizentype", 3)
-                                newNPC:SetKeyValue("classname", "Rebel")
-                                modelNPC = rebels_models[math.random(#rebels_models)]
-                                newNPC:SetModel(modelNPC)
-                            elseif random_npc == "Medic" or name_npc == "Medic" then
-                                newNPC = ents.Create("npc_citizen")
-                                newNPC:SetKeyValue("spawnflags", "131072")
-                                newNPC:SetKeyValue("citizentype", 3)
-                                newNPC:SetKeyValue("classname", "Rebel Medic")
-                                modelNPC = rebels_models[math.random(#rebels_models)]
-                            elseif random_npc == "Refugee" or name_npc == "Refugee" then
-                                newNPC = ents.Create("npc_citizen")
-                                newNPC:SetKeyValue("citizentype", 2)
-                                newNPC:SetKeyValue("classname", "Refugee")
-                                modelNPC = rebels_models[math.random(#rebels_models)]
-                            elseif random_npc == "CombineElite" or name_npc == "CombineElite" then
-                                newNPC = ents.Create("npc_combine_s")
-                                modelNPC = "models/combine_super_soldier.mdl"
-                                newNPC:SetKeyValue("NumGrenades", 20)
-                                newNPC:SetKeyValue("classname", "Combine Elite")
-                                newNPC:SetModel(modelNPC)
-                            elseif random_npc == "CombinePrison" or name_npc == "CombinePrison" then
-                                newNPC = ents.Create("npc_combine_s")
-                                modelNPC = "models/combine_soldier_prisonguard.mdl"
-                                newNPC:SetKeyValue("NumGrenades", 20)
-                                newNPC:SetKeyValue("classname", "Prison Guard")
-                                newNPC:SetModel(modelNPC)
-                            elseif random_npc == "PrisonShotgunner" or name_npc == "PrisonShotgunner" then
-                                newNPC = ents.Create("npc_combine_s")
-                                modelNPC = "models/combine_soldier_prisonguard.mdl"
-                                newNPC:SetKeyValue("NumGrenades", 20)
-                                newNPC:SetKeyValue("classname", "Prison Shotgun Guard")
-                                newNPC:SetModel(modelNPC)
-                            elseif random_npc == "ShotgunSoldier" or name_npc == "ShotgunSoldier" then
-                                newNPC = ents.Create("npc_combine_s")
-                                modelNPC = "models/Combine_Soldier.mdl"
-                                newNPC:SetKeyValue("NumGrenades", 20)
-                                newNPC:SetKeyValue("classname", "Shotgun Soldier")
-                                newNPC:SetModel(modelNPC)
-                            elseif random_npc == "VortigauntSlave" or name_npc == "VortigauntSlave" then
-                                newNPC = ents.Create("npc_vortigaunt")
-                                modelNPC = "models/vortigaunt_slave.mdl"
-                                newNPC:SetKeyValue("classname", "Vortigaunt Slave")
-                                newNPC:SetModel(modelNPC)
-                            elseif random_npc == "npc_odessa" or name_npc == "npc_odessa" then
-                                newNPC = ents.Create("npc_citizen")
-                                newNPC:SetKeyValue("citizentype", 4)
-                                modelNPC = "models/odessa.mdl"
-                                newNPC:SetKeyValue("classname", "Odessa Cubbage")
-                                newNPC:SetModel(modelNPC)
-                            else
-                                newNPC = ents.Create(name_npc or random_npc) ---- Стандартная замена, если не было отфильтрованно
-                            end
+                                -- newNPC = ents.Create(name_npc or random_npc) ---- Стандартная замена, если не было отфильтрованно
 
-                            local owner = NPCOwners_TR[ent]
-
-                            local targetString = newNPC:GetClass()
-                    
-                            for _, str in ipairs(ExceptionsNPCWeapon) do
-                                local isBlacklisted = false
-                                for _, blacklistedItem in ipairs(ExceptionsNPCWeapon) do
-                                    if targetString == blacklistedItem then
-                                        isBlacklisted = true
-                                        break
-                                    end
-                                end
-                                if not isBlacklisted and ent:GetActiveWeapon() != NULL then
-                                    newNPC:Give(name_weapon)
-                                end
-                            end
-                            newNPC:SetPos(ent:GetPos())
-                            newNPC:SetAngles(ent:GetAngles())
-                            newNPC:Spawn()
-                            newNPC:Activate()
-                            local nameEnts = newNPC:GetClass() -- Преобразование в название энтити
-                            local undoName = "Replaced NPC: "..nameEnts -- Удаляемое имя и конкретное название энтити
-                            undo.Create(undoName) -- Все для работы с Undo и соответсвенно с Z клавишей
-                            undo.AddEntity(newNPC) -- Все для работы с Undo и соответсвенно с Z клавишей
-                            undo.SetPlayer(owner) -- Присваивание игроку предмет
-                            undo.Finish() -- Наконец можно удалить этот энтити. Не зря ебался с этой хуйней
-                            ent:Remove() -- удаляем энтити
+                            -- local owner = NPCOwners_TR[ent]
+                            -- newNPC:SetPos(ent:GetPos())
+                            -- newNPC:SetAngles(ent:GetAngles())
+                            -- newNPC:Spawn()
+                            -- newNPC:Activate()
+                            -- local nameEnts = newNPC:GetClass() -- Преобразование в название энтити
+                            -- local undoName = "Replaced NPC: "..nameEnts -- Удаляемое имя и конкретное название энтити
+                            -- undo.Create(undoName) -- Все для работы с Undo и соответсвенно с Z клавишей
+                            -- undo.AddEntity(newNPC) -- Все для работы с Undo и соответсвенно с Z клавишей
+                            -- undo.SetPlayer(owner) -- Присваивание игроку предмет
+                            -- undo.Finish() -- Наконец можно удалить этот энтити. Не зря ебался с этой хуйней
+                            -- ent:Remove() -- удаляем энтити
                             break
                         else
                             -- В противном случае, продолжаем выполнение цикла
