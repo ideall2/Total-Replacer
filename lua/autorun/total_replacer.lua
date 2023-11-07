@@ -39,27 +39,70 @@ local npcList = {
     "npc_metropolice",
     "npc_combine_s"
 }
-local combine_models = {
-    "models/Combine_Soldier.mdl",
-    "models/combine_soldier_prisonguard.mdl",
-    "models/combine_super_soldier.mdl",
+local rebels_models = {
+    "models/humans/group03/female_01.mdl",
+    "models/humans/group03/female_02.mdl",
+    "models/humans/group03/female_03.mdl",
+    "models/humans/group03/female_04.mdl",
+    "models/humans/group03/female_06.mdl",
+    "models/humans/group03/female_07.mdl",
+    "models/humans/group03/male_01.mdl",
+    "models/humans/group03/male_02.mdl",
+    "models/humans/group03/male_03.mdl",
+    "models/humans/group03/male_04.mdl",
+    "models/humans/group03/male_06.mdl",
+    "models/humans/group03/male_07.mdl",
+    "models/humans/group03/male_08.mdl",
+    "models/humans/group03/male_09.mdl",
 }
 
-local rebels_models = {
-    "models/Humans/Group03/Female_01.mdl",
-    "models/Humans/Group03/Female_02.mdl",
-    "models/Humans/Group03/Female_03.mdl",
-    "models/Humans/Group03/Female_04.mdl",
-    "models/Humans/Group03/Female_06.mdl",
-    "models/Humans/Group03/Female_07.mdl",
-    "models/Humans/Group03/Male_01.mdl",
-    "models/Humans/Group03/Male_02.mdl",
-    "models/Humans/Group03/Male_03.mdl",
-    "models/Humans/Group03/Male_04.mdl",
-    "models/Humans/Group03/Male_06.mdl",
-    "models/Humans/Group03/Male_07.mdl",
-    "models/Humans/Group03/Male_08.mdl",
-    "models/Humans/Group03/Male_09.mdl",
+local refugee_models = {
+    "models/humans/group02/female_01.mdl",
+    "models/humans/group02/female_02.mdl",
+    "models/humans/group02/female_03.mdl",
+    "models/humans/group02/female_04.mdl",
+    "models/humans/group02/female_06.mdl",
+    "models/humans/group02/female_07.mdl",
+    "models/humans/group02/male_01.mdl",
+    "models/humans/group02/male_02.mdl",
+    "models/humans/group02/male_03.mdl",
+    "models/humans/group02/male_04.mdl",
+    "models/humans/group02/male_06.mdl",
+    "models/humans/group02/male_07.mdl",
+    "models/humans/group02/male_08.mdl",
+    "models/humans/group02/male_09.mdl",
+}
+local medic_models = {
+    "models/humans/group03m/female_01.mdl",
+    "models/humans/group03m/female_02.mdl",
+    "models/humans/group03m/female_03.mdl",
+    "models/humans/group03m/female_04.mdl",
+    "models/humans/group03m/female_06.mdl",
+    "models/humans/group03m/female_07.mdl",
+    "models/humans/group03m/male_01.mdl",
+    "models/humans/group03m/male_02.mdl",
+    "models/humans/group03m/male_03.mdl",
+    "models/humans/group03m/male_04.mdl",
+    "models/humans/group03m/male_06.mdl",
+    "models/humans/group03m/male_07.mdl",
+    "models/humans/group03m/male_08.mdl",
+    "models/humans/group03m/male_09.mdl",
+}
+local citizen_models = {
+    "models/humans/group01/female_01.mdl",
+    "models/humans/group01/female_02.mdl",
+    "models/humans/group01/female_03.mdl",
+    "models/humans/group01/female_04.mdl",
+    "models/humans/group01/female_06.mdl",
+    "models/humans/group01/female_07.mdl",
+    "models/humans/group01/male_01.mdl",
+    "models/humans/group01/male_02.mdl",
+    "models/humans/group01/male_03.mdl",
+    "models/humans/group01/male_04.mdl",
+    "models/humans/group01/male_06.mdl",
+    "models/humans/group01/male_07.mdl",
+    "models/humans/group01/male_08.mdl",
+    "models/humans/group01/male_09.mdl",
 }
 
 local npcWeaponizedList = {
@@ -266,7 +309,7 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
     
     ------ Функиции для чтения с разных таблиц из папки data
     local function ReadItemsFile_TR_npc(NPC_NameOld_TR, ply)
-        local content = file.Read("total_npc_replacer/"..ent:GetClass().. ".txt", "DATA")
+        local content = file.Read("total_npc_replacer/"..NPC_NameOld_TR.. ".txt", "DATA")
         if content then
             return util.JSONToTable(content) or {}
         else
@@ -292,10 +335,10 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
     -- Функция замены энтити при спавне, а также выдача прав с возможностью удаления с помощью Z если было заспавнено через спавнменю
     local function ReplacingNPC_TR(ent)
         if ent:IsNPC() and IsValid(ent) then -- Ничто кроме NPC
-            if SERVER then
-                local data_npc = ent:GetKeyValues()
-                PrintTable(data_npc)
-            end
+            -- if SERVER then
+            --     local data_npc = ent:GetKeyValues()
+            --     PrintTable(data_npc)
+            -- end
 
             -- PrintTable(ents.GetAll())
             -- print(ent)
@@ -313,17 +356,380 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
             -- Без таймера хрен заработает
             timer.Simple(0.01, function()
                 if IsValid(ent) and not ent:GetOwner():IsPlayer() and not ent:GetOwner():IsNPC() then
+                    -- local NPC_Class = nil
+                    -- for key, value in pairs(allNPC) do
+                    --     -- print(value.Name)
+                    --     if ent:GetClass() == value.Class and key == ent:GetClass() then
+                    --         print("Original NPC")
+                    --         -- print(value.Name)
+                    --         -- print(value.Name)
+                    --         -- print(value.Class)
+                    --         -- if value.Weapons then
+                    --         --     print(value.Weapons[math.random(#value.Weapons)])
+                    --         -- end
+                    --         -- print("Оно из allNPC")
+                    --     end
+
+                    --     if ent:GetClass() == value.Class and key != ent:GetClass() then
+                    --         print(key)
+                    --         if ent:GetModel() == value.Model and not value.Skin then
+                    --             print("Этот нпс имеет установленную модель из таблицы"..key)
+                    --         end
+
+                    --         -- print(value.Name)
+                    --         -- print(value.Name)
+                    --         -- print(value.Class)
+                    --         -- if value.Weapons then
+                    --         --     print(value.Weapons[math.random(#value.Weapons)])
+                    --         -- end
+                    --         -- print("Оно из allNPC")
+                    --     end
+                    -- end
                     -- print(ent:GetModel())
+                    local Name_NPC_Spawnmenu = NULL
+                        if ent:GetClass() == "npc_citizen" then
+                            for _, v in pairs(rebels_models) do
+                                local Model_name_NPC = ent:GetModel()
+                                 if Model_name_NPC == v then
+                                    ent:SetNW2String("Spawnmenu_name", "Rebel")
+                                    break
+                                 end
+                             end
+
+                             for _, v in pairs(citizen_models) do
+                                local Model_name_NPC = ent:GetModel()
+                                 if Model_name_NPC == v then
+                                    ent:SetNW2String("Spawnmenu_name", "npc_citizen")
+                                    break
+                                 end
+                             end
+
+                             for _, v in pairs(refugee_models) do
+                                local Model_name_NPC = ent:GetModel()
+                                 if Model_name_NPC == v then
+                                    ent:SetNW2String("Spawnmenu_name", "Refugee")
+                                    break
+                                 end
+                             end
+                             for _, v in pairs(medic_models) do
+                                local Model_name_NPC = ent:GetModel()
+                                 if Model_name_NPC == v then
+                                    ent:SetNW2String("Spawnmenu_name", "Medic")
+                                    break
+                                 end
+                             end
+                             if ent:GetModel() == "models/odessa.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_odessa")
+                             end
+                        end
+
+                        if ent:GetClass() == "npc_vortigaunt" then
+                            local Model_name_NPC = ent:GetModel()
+                            -- print(Model_name_NPC)
+                            if Model_name_NPC == "models/vortigaunt_slave.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "VortigauntSlave")
+                            end
+                            if Model_name_NPC == "models/vortigaunt.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_vortigaunt")
+                            end
+                        end
+                        if ent:GetClass() == "npc_combine_s" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/combine_super_soldier.mdl" then
+                               ent:SetNW2String("Spawnmenu_name", "CombineElite")
+                            end
+                            if Model_name_NPC == "models/combine_soldier_prisonguard.mdl" and ent:GetSkin() == 0 then
+                                ent:SetNW2String("Spawnmenu_name", "CombinePrison")
+                            end
+                            if Model_name_NPC == "models/combine_soldier_prisonguard.mdl" and ent:GetSkin() == 1 then
+                                ent:SetNW2String("Spawnmenu_name", "PrisonShotgunner")
+                            end
+                            if Model_name_NPC == "models/combine_soldier.mdl" and ent:GetSkin() == 1 then
+                                ent:SetNW2String("Spawnmenu_name", "ShotgunSoldier")
+                            end
+                            if Model_name_NPC == "models/combine_soldier.mdl" and ent:GetSkin() == 0 then
+                                ent:SetNW2String("Spawnmenu_name", "npc_combine_s")
+                            end
+                        end
+                        if ent:GetClass() == "npc_headcrab" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/headcrabclassic.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_headcrab")
+                            end
+                        end
+                        if ent:GetClass() == "npc_headcrab_black" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/headcrabblack.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_headcrab_black")
+                            end
+                        end
+                        if ent:GetClass() == "npc_headcrab_fast" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/headcrab.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_headcrab_fast")
+                            end
+                        end
+                        if ent:GetClass() == "npc_metropolice" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/police.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_metropolice")
+                            end
+                        end
+                        if ent:GetClass() == "npc_poisonzombie" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/zombie/poison.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_poisonzombie")
+                            end
+                        end
+                        if ent:GetClass() == "npc_zombie" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/zombie/classic.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_zombie")
+                            end
+                        end
+                        if ent:GetClass() == "npc_antlionguard" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/antlion_guard.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_antlionguard")
+                            end
+                        end
+                        if ent:GetClass() == "npc_antlion" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/antlion.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_antlion")
+                            end
+                        end
+                        if ent:GetClass() == "npc_fastzombie" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/zombie/fast.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_fastzombie")
+                            end
+                        end
+                        if ent:GetClass() == "npc_fastzombie_torso" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/zombie/fast_torso.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_fastzombie_torso")
+                            end
+                        end
+                        if ent:GetClass() == "npc_zombie_torso" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/zombie/classic_torso.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_zombie_torso")
+                            end
+                        end
+
+                        if ent:GetClass() == "npc_alyx" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/alyx.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_alyx")
+                            end
+                        end
+                        if ent:GetClass() == "npc_barney" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/barney.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_barney")
+                            end
+                        end
+                        if ent:GetClass() == "npc_breen" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/breen.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_breen")
+                            end
+                        end
+                        if ent:GetClass() == "npc_dog" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/dog.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_dog")
+                            end
+                        end
+                        if ent:GetClass() == "npc_gman" then
+                            local Model_name_NPC = ent:GetModel()
+                            print(Model_name_NPC)
+                            if Model_name_NPC == "models/gman.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_gman")
+                            end
+                        end
+                        if ent:GetClass() == "npc_eli" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/eli.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_eli")
+                            end
+                        end
+                        if ent:GetClass() == "npc_gman" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/gman.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_gman")
+                            end
+                        end
+                        if ent:GetClass() == "npc_kleiner" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/kleiner.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_kleiner")
+                            end
+                        end
+                        if ent:GetClass() == "npc_mossman" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/mossman.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_mossman")
+                            end
+                        end
+                        if ent:GetClass() == "npc_clawscanner" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/shield_scanner.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_clawscanner")
+                            end
+                        end
+                        if ent:GetClass() == "npc_combine_camera" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/combine_camera/combine_camera.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_combine_camera")
+                            end
+                        end
+                        if ent:GetClass() == "npc_combinedropship" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/combine_dropship.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_combinedropship")
+                            end
+                        end
+                        if ent:GetClass() == "npc_combinegunship" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/gunship.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_combinegunship")
+                            end
+                        end
+                        if ent:GetClass() == "npc_cscanner" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/combine_scanner.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_cscanner")
+                            end
+                        end
+                        if ent:GetClass() == "npc_helicopter" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/combine_helicopter.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_helicopter")
+                            end
+                        end
+                        if ent:GetClass() == "npc_manhack" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/manhack.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_manhack")
+                            end
+                        end
+                        if ent:GetClass() == "npc_rollermine" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/roller.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_rollermine")
+                            end
+                        end
+                        if ent:GetClass() == "npc_stalker" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/stalker.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_stalker")
+                            end
+                        end
+                        if ent:GetClass() == "npc_strider" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/combine_strider.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_strider")
+                            end
+                        end
+                        if ent:GetClass() == "npc_turret_ceiling" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/combine_turrets/ceiling_turret.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_turret_ceiling")
+                            end
+                        end
+                        if ent:GetClass() == "npc_turret_floor" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/combine_turrets/floor_turret.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_turret_floor")
+                            end
+                        end
+                        if ent:GetClass() == "npc_crow" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/crow.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_crow")
+                            end
+                        end
+                        if ent:GetClass() == "npc_monk" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/monk.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_monk")
+                            end
+                        end
+                        if ent:GetClass() == "npc_pigeon" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/pigeon.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_pigeon")
+                            end
+                        end
+                        if ent:GetClass() == "npc_seagull" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/seagull.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_seagull")
+                            end
+                        end
+
+
+
+
+
                     while true do
+                        local Name_NPC_RIF_TR = NULL 
+                        if Name_NPC_Spawnmenu != NULL then
+                            for key, value in pairs(allNPC) do
+                                local Name_NPC_table = key
+                                if Name_NPC_Spawnmenu == key then
+                                    print(Name_NPC_table)
+                                    Name_NPC_RIF_TR = key
+                                    break
+                                end
+                            end
+                            -- Name_NPC_RIF_TR = Name_NPC_Spawnmenu
+                        else
+                            Name_NPC_RIF_TR = ent:GetClass()    
+                            -- print(Name_NPC_RIF_TR)                     
+                        end
+                        print(ent:GetNW2String("Spawnmenu_name"))
+
+                        local ContentNPC = ReadItemsFile_TR_npc(Name_NPC_RIF_TR)
+                        local ContentNPC_Choosed = ContentNPC[math.random(#ContentNPC)]
+
+                        local npc_pattern = "([^:]+):([^:]+):([^:]+)"
+                        local npc_name, chance_npc_str, weapon_npc = nil, nil, nil
+                        if ContentNPC_Choosed != nil then
+                            -- print(ContentNPC_Choosed)
+                            npc_name, chance_npc_str, weapon_npc = string.match(ContentNPC_Choosed, npc_pattern)
+                            -- print(npc_name)
+                        end
+                        
+                        -- print(Name_NPC_Spawnmenu)
                         -- print(NPC_NameOld_TR)
+                        -- print(find)
                         for k, v in pairs(allNPCWeapons) do
                             local weaponClass = v.class
                         end
+                        -- local NPC_Class = nil
+                        -- for key, value in pairs(allNPC) do
+                        --     if npc_name == key then
+                        --         print(value.Name)
+                        --         print(value.Class)
+                        --         if value.Weapons then
+                        --             print(value.Weapons[math.random(#value.Weapons)])
+                        --         end
+                        --         if value.KeyValues then
+                        --             PrintTable(value.KeyValues)
+                        --             for key, value in pairs(value.KeyValues) do
+                        --                 print(key)
+                        --                 print(value)
+                        --             end
+                        --         end
+                        --         print("Оно из allNPC")
+                        --     end
+                        -- end
                         -- local RandNPCWeapon = allNPCWeapons_Random[math.random(#allNPCWeapons_Random)]
                         -- local RandNPCWeaponReady = (RandNPCWeapon..":".."100")
                         -- local ContentNPCWeapons = ReadItemsFile_TR_npcweapon(ent)
-                        local ContentNPC = ReadItemsFile_TR_npc(ent)
-                        local ContentNPC_Choosed = ContentNPC[math.random(#ContentNPC)]
 
                         -- local randNPC_TABLE = table.Random(allNPC)
                         -- PrintTable(randNPC_TABLE)
@@ -342,10 +748,22 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
                         -- if ent:GetActiveWeapon() != NULL then
                         --     OldNameWeapon = ent:GetActiveWeapon():GetClass()
                         -- end
-
                         local RandNPC = allNPC[math.random(#allNPC)]
-                        -- local RandomFromAllNPC = table.Random(allNPC)
-                        -- print(RandomFromAllNPC.Category)
+                        local RandomFromAllNPC = table.Random(allNPC)
+
+                        -- print(Name_NPC_RIF_TR)
+                        -- local NPC_Models_Table = NULL
+                        for key, value in pairs(allNPC) do
+                            -- print(key)
+                            if key == Name_NPC_RIF_TR then
+                                if value then
+                                    -- print(value)
+                                    -- PrintTable(value)
+                                end
+                                break -- Если нашли, выходим из цикла
+                            end
+                        end
+
                         -- if RandomFromAllNPC.Model then
                         --     print("Model Is: "..RandomFromAllNPC.Model)
                         -- end
