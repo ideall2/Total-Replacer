@@ -690,7 +690,10 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
                             Name_NPC_RIF_TR = ent:GetClass()    
                             -- print(Name_NPC_RIF_TR)                     
                         end
-                        print(ent:GetNW2String("Spawnmenu_name"))
+                        -- print(ent:GetNW2String("Spawnmenu_name"))
+                        if ent:GetNW2String("Spawnmenu_name") != "" then
+                            
+                        end
 
                         local ContentNPC = ReadItemsFile_TR_npc(Name_NPC_RIF_TR)
                         local ContentNPC_Choosed = ContentNPC[math.random(#ContentNPC)]
