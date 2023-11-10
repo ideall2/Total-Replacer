@@ -355,37 +355,7 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
             
             -- Без таймера хрен заработает
             timer.Simple(0.01, function()
-                if IsValid(ent) and not ent:GetOwner():IsPlayer() and not ent:GetOwner():IsNPC() then
-                    -- local NPC_Class = nil
-                    -- for key, value in pairs(allNPC) do
-                    --     -- print(value.Name)
-                    --     if ent:GetClass() == value.Class and key == ent:GetClass() then
-                    --         print("Original NPC")
-                    --         -- print(value.Name)
-                    --         -- print(value.Name)
-                    --         -- print(value.Class)
-                    --         -- if value.Weapons then
-                    --         --     print(value.Weapons[math.random(#value.Weapons)])
-                    --         -- end
-                    --         -- print("Оно из allNPC")
-                    --     end
-
-                    --     if ent:GetClass() == value.Class and key != ent:GetClass() then
-                    --         print(key)
-                    --         if ent:GetModel() == value.Model and not value.Skin then
-                    --             print("Этот нпс имеет установленную модель из таблицы"..key)
-                    --         end
-
-                    --         -- print(value.Name)
-                    --         -- print(value.Name)
-                    --         -- print(value.Class)
-                    --         -- if value.Weapons then
-                    --         --     print(value.Weapons[math.random(#value.Weapons)])
-                    --         -- end
-                    --         -- print("Оно из allNPC")
-                    --     end
-                    -- end
-                    -- print(ent:GetModel())
+                if IsValid(ent) and not ent:GetOwner():IsPlayer() and not ent:GetOwner():IsNPC() and ent:GetNW2Bool("IsReplaced") != true then
                     local Name_NPC_Spawnmenu = NULL
                         if ent:GetClass() == "npc_citizen" then
                             for _, v in pairs(rebels_models) do
@@ -672,30 +642,24 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
 
 
 
-
+                    local Name_NPC = ""
+                    local Class_NPC = ""
+                    local Weapons_NPC = ""
+                    local keyValues_NPC = {}
+                    local Model_NPC = ""
+                    local SpawnFlags_NPC = ""
+                    local Skin_NPC = 0
+                    local OffSet_NPC = 0
+                    local Spawnmenu_name_NPC = ""
+                    for key, value in pairs(allNPC) do
+                        if key == ent:GetNW2String("Spawnmenu_name") then
+                            Spawnmenu_name_NPC = key
+                            break
+                        end
+                    end
 
                     while true do
-                        local Name_NPC_RIF_TR = NULL 
-                        if Name_NPC_Spawnmenu != NULL then
-                            for key, value in pairs(allNPC) do
-                                local Name_NPC_table = key
-                                if Name_NPC_Spawnmenu == key then
-                                    print(Name_NPC_table)
-                                    Name_NPC_RIF_TR = key
-                                    break
-                                end
-                            end
-                            -- Name_NPC_RIF_TR = Name_NPC_Spawnmenu
-                        else
-                            Name_NPC_RIF_TR = ent:GetClass()    
-                            -- print(Name_NPC_RIF_TR)                     
-                        end
-                        -- print(ent:GetNW2String("Spawnmenu_name"))
-                        if ent:GetNW2String("Spawnmenu_name") != "" then
-                            
-                        end
-
-                        local ContentNPC = ReadItemsFile_TR_npc(Name_NPC_RIF_TR)
+                        local ContentNPC = ReadItemsFile_TR_npc(Spawnmenu_name_NPC)
                         local ContentNPC_Choosed = ContentNPC[math.random(#ContentNPC)]
 
                         local npc_pattern = "([^:]+):([^:]+):([^:]+)"
@@ -704,179 +668,99 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
                             -- print(ContentNPC_Choosed)
                             npc_name, chance_npc_str, weapon_npc = string.match(ContentNPC_Choosed, npc_pattern)
                             -- print(npc_name)
+                            -- print(chance_npc_str)
+                            -- print(weapon_npc)
+                        end
+                        for key, value in pairs(allNPC) do
+                            if key == npc_name then
+                                -- print(key)
+                                if value.Class then
+                                    Class_NPC = value.Class
+                                end
+                                if value.Name then
+                                    Name_NPC = value.Name
+                                end
+                                if value.Weapons and weapon_npc == "standart" then
+                                    Weapons_NPC = value.Weapons[math.random(#value.Weapons)]
+                                    -- print(Weapons_NPC)
+                                end
+                                if weapon_npc != "standart" and weapon_npc != "" then
+                                    Weapons_NPC = weapon_npc
+                                    -- print(Weapons_NPC)
+                                end
+                                    if value.KeyValues then
+                                        for key, value in pairs(value.KeyValues) do
+                                            keyValues_NPC[key] = value
+                                        end
+                                    end
+                                if value.Model then
+                                    Model_NPC = value.Model
+                                end
+                                if value.SpawnFlags then
+                                    SpawnFlags_NPC = value.SpawnFlags
+                                end
+                                if value.Offset then
+                                    OffSet_NPC = value.Offset
+                                end
+                                if value.Skin then
+                                    Skin_NPC = value.Skin
+                                end
+                                break
+                            end
                         end
                         
-                        -- print(Name_NPC_Spawnmenu)
-                        -- print(NPC_NameOld_TR)
-                        -- print(find)
                         for k, v in pairs(allNPCWeapons) do
                             local weaponClass = v.class
                         end
-                        -- local NPC_Class = nil
-                        -- for key, value in pairs(allNPC) do
-                        --     if npc_name == key then
-                        --         print(value.Name)
-                        --         print(value.Class)
-                        --         if value.Weapons then
-                        --             print(value.Weapons[math.random(#value.Weapons)])
-                        --         end
-                        --         if value.KeyValues then
-                        --             PrintTable(value.KeyValues)
-                        --             for key, value in pairs(value.KeyValues) do
-                        --                 print(key)
-                        --                 print(value)
-                        --             end
-                        --         end
-                        --         print("Оно из allNPC")
-                        --     end
-                        -- end
-                        -- local RandNPCWeapon = allNPCWeapons_Random[math.random(#allNPCWeapons_Random)]
-                        -- local RandNPCWeaponReady = (RandNPCWeapon..":".."100")
-                        -- local ContentNPCWeapons = ReadItemsFile_TR_npcweapon(ent)
-
-                        -- local randNPC_TABLE = table.Random(allNPC)
-                        -- PrintTable(randNPC_TABLE)
-                        -- local randNPC_Class = randNPC_TABLE.Class
-                        -- print(randNPC_Class)
-                        -- local randomNPC_table = allNPC[math.random(#allNPC)] 
-                        -- local list_npc = ReadItemsFile_TR_npc(ent)
-                        -- local randomNPC_table_ready = (randomNPC_table..":".."100:".."weapon_ar2")
-                        -- local random_npc = list_npc[math.random(#list_npc)] or randomNPC_table_ready
-
-                        
-                        -- print(ContentNPC_Choosed)
-                        -- local ContentNPC_RandWeapon = ContentNPCWeapons[math.random(#ContentNPCWeapons)] or RandNPCWeaponReady
-
-                        -- local OldNameWeapon = ""
-                        -- if ent:GetActiveWeapon() != NULL then
-                        --     OldNameWeapon = ent:GetActiveWeapon():GetClass()
-                        -- end
                         local RandNPC = allNPC[math.random(#allNPC)]
                         local RandomFromAllNPC = table.Random(allNPC)
 
-                        -- print(Name_NPC_RIF_TR)
-                        -- local NPC_Models_Table = NULL
-                        for key, value in pairs(allNPC) do
-                            -- print(key)
-                            if key == Name_NPC_RIF_TR then
-                                if value then
-                                    -- print(value)
-                                    -- PrintTable(value)
-                                end
-                                break -- Если нашли, выходим из цикла
-                            end
-                        end
-
-                        -- if RandomFromAllNPC.Model then
-                        --     print("Model Is: "..RandomFromAllNPC.Model)
-                        -- end
-                        -- if RandomFromAllNPC.Class then
-                        --     print("NPC Class Is: "..RandomFromAllNPC.Class)
-                        -- end
-                        -- if RandomFromAllNPC.Weapons then
-                        --     PrintTable(RandomFromAllNPC.Weapons)
-                        --     -- local RandWeaponNPC = table.Random(RandomFromAllNPC.Weapons)
-                        --     -- print(RandWeaponNPC)
-                        -- end
-                        -- if RandomFromAllNPC.SpawnFlags then
-                        --     print(RandomFromAllNPC.SpawnFlags)
-                        -- end
-                        -- print(Class_NPC)
-
-
-                        -- local randomIndex = math.random(1, #allNPC)
-                        -- local randomValue = allNPC[randomIndex]
-                        -- PrintTable(allNPC)
-                        -- local table_RandNPC = RandNPC[Class]
-                        -- print(table_RandNPC)
-
-                        -- local weapon_npc_pattern = "([^:]+):([^:]+)"
-                        -- local name_weapon, chance_npc_weapon_str = string.match(ContentNPC_RandWeapon, weapon_npc_pattern)
-                        -- if not name_weapon then -- Если не будет получено значение из строк из DATA то оно вставит случайное оружие.
-                        --     name_weapon = ContentNPC_RandWeapon
-                        -- end
-
-                        
-
                         local chance_npc = 100
-
-
+                        if chance_npc_str != nil then
+                            chance_npc = tonumber(chance_npc_str)
+                        end
                         -- ------------------- Шанс
                         local chance = math.random(1, 100)
                         if chance <= chance_npc then
-                            -- local class_npc = ""
-                            -- if random_npc == "Rebel" or name_npc == "Rebel" then
-                            --     newNPC = ents.Create("npc_citizen")
-                            --     newNPC:SetKeyValue("citizentype", 3)
-                            --     newNPC:SetKeyValue("classname", "Rebel")
-                            --     modelNPC = rebels_models[math.random(#rebels_models)]
-                            --     newNPC:SetModel(modelNPC)
-                            -- elseif random_npc == "Medic" or name_npc == "Medic" then
-                            --     newNPC = ents.Create("npc_citizen")
-                            --     newNPC:SetKeyValue("spawnflags", "131072")
-                            --     newNPC:SetKeyValue("citizentype", 3)
-                            --     newNPC:SetKeyValue("classname", "Rebel Medic")
-                            --     modelNPC = rebels_models[math.random(#rebels_models)]
-                            -- elseif random_npc == "Refugee" or name_npc == "Refugee" then
-                            --     newNPC = ents.Create("npc_citizen")
-                            --     newNPC:SetKeyValue("citizentype", 2)
-                            --     newNPC:SetKeyValue("classname", "Refugee")
-                            --     modelNPC = rebels_models[math.random(#rebels_models)]
-                            -- elseif random_npc == "CombineElite" or name_npc == "CombineElite" then
-                            --     newNPC = ents.Create("npc_combine_s")
-                            --     modelNPC = "models/combine_super_soldier.mdl"
-                            --     newNPC:SetKeyValue("NumGrenades", 20)
-                            --     newNPC:SetKeyValue("classname", "Combine Elite")
-                            --     newNPC:SetModel(modelNPC)
-                            -- elseif random_npc == "CombinePrison" or name_npc == "CombinePrison" then
-                            --     newNPC = ents.Create("npc_combine_s")
-                            --     modelNPC = "models/combine_soldier_prisonguard.mdl"
-                            --     newNPC:SetKeyValue("NumGrenades", 20)
-                            --     newNPC:SetKeyValue("classname", "Prison Guard")
-                            --     newNPC:SetModel(modelNPC)
-                            -- elseif random_npc == "PrisonShotgunner" or name_npc == "PrisonShotgunner" then
-                            --     newNPC = ents.Create("npc_combine_s")
-                            --     modelNPC = "models/combine_soldier_prisonguard.mdl"
-                            --     newNPC:SetKeyValue("NumGrenades", 20)
-                            --     newNPC:SetKeyValue("classname", "Prison Shotgun Guard")
-                            --     newNPC:SetModel(modelNPC)
-                            -- elseif random_npc == "ShotgunSoldier" or name_npc == "ShotgunSoldier" then
-                            --     newNPC = ents.Create("npc_combine_s")
-                            --     modelNPC = "models/Combine_Soldier.mdl"
-                            --     newNPC:SetKeyValue("NumGrenades", 20)
-                            --     newNPC:SetKeyValue("classname", "Shotgun Soldier")
-                            --     newNPC:SetModel(modelNPC)
-                            -- elseif random_npc == "VortigauntSlave" or name_npc == "VortigauntSlave" then
-                            --     newNPC = ents.Create("npc_vortigaunt")
-                            --     modelNPC = "models/vortigaunt_slave.mdl"
-                            --     newNPC:SetKeyValue("classname", "Vortigaunt Slave")
-                            --     newNPC:SetModel(modelNPC)
-                            -- elseif random_npc == "npc_odessa" or name_npc == "npc_odessa" then
-                            --     newNPC = ents.Create("npc_citizen")
-                            --     newNPC:SetKeyValue("citizentype", 4)
-                            --     modelNPC = "models/odessa.mdl"
-                            --     newNPC:SetKeyValue("classname", "Odessa Cubbage")
-                            --     newNPC:SetModel(modelNPC)
-                            -- else
-                            --     newNPC = ents.Create("npc_combine_s") ---- Стандартная замена, если не было отфильтрованно
-                            -- end
-                            -- newNPC = ents.Create(name_npc or random_npc) ---- Стандартная замена, если не было отфильтрованно
+                            if Class_NPC != "" and ent:GetNW2Bool("IsReplaced") != true then
+                                local newNPC = ents.Create(Class_NPC) -- or random_npc) ---- Стандартная замена, если не было отфильтрованно
+                                local owner = NPCOwners_TR[ent]
+                                newNPC:SetPos(ent:GetPos() + Vector(0, 0, 5))
+                                newNPC:SetAngles(ent:GetAngles())
+                                newNPC:SetNW2Bool("IsReplaced", true)
 
-                            -- local owner = NPCOwners_TR[ent]
-                            -- newNPC:SetPos(ent:GetPos())
-                            -- newNPC:SetAngles(ent:GetAngles())
-                            -- newNPC:Spawn()
-                            -- newNPC:Activate()
-                            -- local nameEnts = newNPC:GetClass() -- Преобразование в название энтити
-                            -- local undoName = "Replaced NPC: "..nameEnts -- Удаляемое имя и конкретное название энтити
-                            -- undo.Create(undoName) -- Все для работы с Undo и соответсвенно с Z клавишей
-                            -- undo.AddEntity(newNPC) -- Все для работы с Undo и соответсвенно с Z клавишей
-                            -- undo.SetPlayer(owner) -- Присваивание игроку предмет
-                            -- undo.Finish() -- Наконец можно удалить этот энтити. Не зря ебался с этой хуйней
-                            -- ent:Remove() -- удаляем энтити
-                            break
-                        else
-                            -- В противном случае, продолжаем выполнение цикла
+                                if Name_NPC != "" then
+                                    newNPC:SetName(Name_NPC)
+                                end
+                                if Weapons_NPC != ""  then
+                                    newNPC:Give(Weapons_NPC)
+                                end
+                                for key, value in pairs(keyValues_NPC) do
+                                    newNPC:SetKeyValue(key, value)
+                                end
+                                if Skin_NPC != "" then
+                                    newNPC:SetSkin(Skin_NPC)
+                                end
+                                if SpawnFlags_NPC != "" then
+                                    newNPC:SetKeyValue("spawnflags",bit.bor(SpawnFlags_NPC))
+                                end
+                                newNPC:Spawn()
+                                newNPC:Activate()
+                                if Model_NPC != "" then
+                                    newNPC:SetModel(Model_NPC)
+                                end
+                                local nameEnts = newNPC:GetClass() -- Преобразование в название энтити
+                                local undoName = "Replaced NPC: "..nameEnts -- Удаляемое имя и конкретное название энтити
+                                undo.Create(undoName) -- Все для работы с Undo и соответсвенно с Z клавишей
+                                undo.AddEntity(newNPC) -- Все для работы с Undo и соответсвенно с Z клавишей
+                                undo.SetPlayer(owner) -- Присваивание игроку предмет
+                                undo.Finish() -- Наконец можно удалить этот энтити. Не зря ебался с этой хуйней
+                                ent:Remove() -- удаляем энтити
+                                break
+                            else
+                                break -- Это нужно для того чтобы в бесконечный цикл не ушел,
+                                -- И тем самым не завис GMOD
+                            end
                         end
                     end
                 end
