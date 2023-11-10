@@ -52,7 +52,7 @@ concommand.Add("tr_npc_menu", function(ply, cmd, args)
             if CategoryName != "Combine" and CategoryName != "Humans + Resistance" and CategoryName != "Animals" and CategoryName != "Zombies + Enemy Aliens" then continue end
             if AllNPC.AdminOnly and not LocalPlayer():IsAdmin() then continue end
             local icon = vgui.Create("ContentIcon", proppanel)
-            icon:SetMaterial(AllNPC.IconOverride or "entities/" .. AllNPC.Name .. ".png")
+            icon:SetMaterial(AllNPC.IconOverride or "entities/" .. AllNPC.NameKey .. ".png")
             icon:SetName(AllNPC.PrintName or "#" .. AllNPC.Name)
             icon:SetAdminOnly(AllNPC.AdminOnly or false)
             -- print(allNPC.NameKey)
@@ -248,7 +248,7 @@ end)
 
 
 -- Функции для чтения и записи индивидуальных файлов игроков
-local function ReadItemsFileTR_Entity(ply)
+local function ReadItemsFileTR_NPC(ply)
     local content = file.Read("total_npc_replacer/" .. cur_table_tr_npc .. ".txt", "DATA")
     if content then
         return util.JSONToTable(content) or {}
@@ -258,7 +258,7 @@ local function ReadItemsFileTR_Entity(ply)
     return content
 end
 
-local function WriteItemsFileTR_Entity(ply, items)
+local function WriteItemsFileTR_NPC(ply, items)
     if not file.Exists("total_npc_replacer", "DATA") or not file.Exists("total_weapon_replacer", "DATA") then
         -- Чтоб не ругался из-за отсутствия папок и файлов
         file.CreateDir("total_npc_replacer")
@@ -274,10 +274,10 @@ concommand.Add("open_tr_menu_edit_npc", function(ply, cmd, args)
 
     if not ply:IsPlayer() then return end
 
-    local items = ReadItemsFileTR_Entity(ply)
+    local items = ReadItemsFileTR_NPC(ply)
 
-    if IsValid(ply.EntityEditor) then
-        ply.EntityEditor:Remove()
+    if IsValid(ply.NPCEditor) then
+        ply.NPCEditor:Remove()
     end
     
     local spawnmenu_border = GetConVar("spawnmenu_border")
@@ -290,14 +290,14 @@ concommand.Add("open_tr_menu_edit_npc", function(ply, cmd, args)
     local changed_lists = {}
     local dirty = false
 
-    ply.EntityEditor = vgui.Create("DFrame")
-    ply.EntityEditor:SetSize(1000, 900)
-    ply.EntityEditor:SetTitle("Entity replacer")
-    ply.EntityEditor:Center()
-    ply.EntityEditor:MakePopup()
+    ply.NPCEditor = vgui.Create("DFrame")
+    ply.NPCEditor:SetSize(1000, 900)
+    ply.NPCEditor:SetTitle("NPC replacer")
+    ply.NPCEditor:Center()
+    ply.NPCEditor:MakePopup()
     
     --------- Часть кода для панельки выбора оружия (Начало)
-    local panel = vgui.Create("DPanel", ply.EntityEditor)
+    local panel = vgui.Create("DPanel", ply.NPCEditor)
     panel:Dock(FILL)    
 
     local tabs = vgui.Create("DPropertySheet", panel)
@@ -309,19 +309,19 @@ concommand.Add("open_tr_menu_edit_npc", function(ply, cmd, args)
        
 
     -- Список текущего оружия игрока
-    local entityList = vgui.Create("DListView", tab1)
-    entityList:SetSize(280, 540)
-    entityList:SetPos(10, 10)
-    entityList:AddColumn("Entities")
+    local npcList = vgui.Create("DListView", tab1)
+    npcList:SetSize(280, 540)
+    npcList:SetPos(10, 10)
+    npcList:AddColumn("NPC")
         
     
     -- SpawnIcon для выбора оружия
-    local entitySelect = vgui.Create("DPanelSelect", ply.EntityEditor)
-    entitySelect:SetSize(500, 890)
-    entitySelect:SetPos(310, 30)
+    local npcSelect = vgui.Create("DPanelSelect", ply.NPCEditor)
+    npcSelect:SetSize(500, 890)
+    npcSelect:SetPos(310, 30)
 
-    for _, entity in pairs(items) do -- Показывает имя в списке уже добавленных в замену
-        entityList:AddLine(entity)
+    for _, npc in pairs(items) do -- Показывает имя в списке уже добавленных в замену
+        npcList:AddLine(npc)
     end
 
     -------------------------------------------------------------------------------------------------------------------------
@@ -329,7 +329,7 @@ concommand.Add("open_tr_menu_edit_npc", function(ply, cmd, args)
 
 
 
-    local propscroll = vgui.Create("DScrollPanel", ply.EntityEditor)
+    local propscroll = vgui.Create("DScrollPanel", ply.NPCEditor)
     propscroll:Dock(FILL)
     propscroll:DockMargin(300, 24, 16, 16)
 
@@ -349,6 +349,7 @@ concommand.Add("open_tr_menu_edit_npc", function(ply, cmd, args)
 
         Categorised[categ] = Categorised[categ] or {}
         table.insert(Categorised[categ], v)
+        v.NameKey = k
     end
  
     for CategoryName, v in SortedPairs(Categorised) do
@@ -359,44 +360,48 @@ concommand.Add("open_tr_menu_edit_npc", function(ply, cmd, args)
         for k, AllNPC in SortedPairsByMemberValue(v, "PrintName") do
             if AllNPC.AdminOnly and not LocalPlayer():IsAdmin() then continue end
             local icon = vgui.Create("ContentIcon", proppanel)
-            icon:SetMaterial(AllNPC.IconOverride or "entities/" .. AllNPC.ClassName .. ".png")
-            icon:SetName(AllNPC.PrintName or "#" .. AllNPC.ClassName)
+            icon:SetMaterial(AllNPC.IconOverride or "entities/" .. AllNPC.NameKey .. ".png")
+            icon:SetName(AllNPC.PrintName or "#" .. AllNPC.NameKey)
             icon:SetAdminOnly(AllNPC.AdminOnly or false)
 
             icon.DoClick = function()
                 local chance = 100
-                if not table.HasValue(items, AllNPC.ClassName.. ":"..chance) then
-                    table.insert(items, AllNPC.ClassName.. ":"..chance)
-                    entityList:AddLine(AllNPC.ClassName.. ":"..chance)
-                    WriteItemsFileTR_Entity(ply, items)
+                if not table.HasValue(items, AllNPC.NameKey.. ":"..chance) then
+                    table.insert(items, AllNPC.NameKey.. ":"..chance..":".."standart")
+                    npcList:AddLine(AllNPC.NameKey.. ":"..chance..":".."standart")
+                    WriteItemsFileTR_NPC(ply, items)
                 end
             end
             icon.DoRightClick = function()
                 local mouseX, mouseY = input.GetCursorPos()
                 -- Создаем панель (окно) с кнопкой
-                local myPanel = vgui.Create("DFrame")
-                myPanel:SetSize(300, 150)
-                myPanel:SetTitle("Add Entity with chances")
-                myPanel:SetPos(mouseX, mouseY)
-                myPanel:MakePopup()
+                local Additional_Settings = vgui.Create("DFrame")
+                Additional_Settings:SetSize(300, 250)
+                Additional_Settings:SetTitle("Add NPC with chances and weapons")
+                Additional_Settings:SetPos(mouseX, mouseY)
+                Additional_Settings:MakePopup()
 
-                local myButton = vgui.Create("DButton", myPanel)
-                myButton:SetSize(100, 30)
-                myButton:SetPos(100, 120)
-                myButton:SetText("Set Chance")
+                local SetSettings = vgui.Create("DButton", Additional_Settings)
+                SetSettings:SetSize(100, 30)
+                SetSettings:SetPos(100, 220)
+                SetSettings:SetText("Set Chance")
 
-                local textEntry = vgui.Create("DTextEntry", myPanel)
+                local textEntry = vgui.Create("DTextEntry", Additional_Settings)
                 textEntry:SetSize(280, 30)
                 textEntry:SetPos(10, 40)
 
-                myButton.DoClick = function()
+                local dropDownList = vgui.Create("DComboBox", Additional_Settings)
+                dropDownList:SetPos(10, 150)
+                dropDownList:SetSize(280, 25)
+
+                SetSettings.DoClick = function()
                     local chance = textEntry:GetValue()
-                    if not table.HasValue(items, AllNPC.ClassName.. ":"..chance) then
-                        table.insert(items, AllNPC.ClassName.. ":"..chance)
-                        entityList:AddLine(AllNPC.ClassName.. ":"..chance)
-                        WriteItemsFileTR_Entity(ply, items)
+                    if not table.HasValue(items, AllNPC.NameKey.. ":"..chance) then
+                        table.insert(items, AllNPC.NameKey.. ":"..chance)
+                        npcList:AddLine(AllNPC.NameKey.. ":"..chance)
+                        WriteItemsFileTR_NPC(ply, items)
                     end
-                    myPanel:Close()
+                    Additional_Settings:Close()
                 end
             end
 
@@ -406,28 +411,28 @@ concommand.Add("open_tr_menu_edit_npc", function(ply, cmd, args)
     -------------------------------------------------------------------------------------------------------------------------
     
     -- Кнопка удаления
-    local removeButton = vgui.Create("DButton", ply.EntityEditor)
+    local removeButton = vgui.Create("DButton", ply.NPCEditor)
     removeButton:SetSize(280, 25)
     removeButton:SetPos(10, 675)
-    removeButton:SetText("Delete selected entity")
+    removeButton:SetText("Delete selected npc")
     removeButton.DoClick = function()
-        local selectedLine = entityList:GetSelectedLine()
+        local selectedLine = npcList:GetSelectedLine()
         if selectedLine then
             table.remove(items, selectedLine)
-            WriteItemsFileTR_Entity(ply, items)   
-            entityList:RemoveLine(selectedLine)    
+            WriteItemsFileTR_NPC(ply, items)   
+            npcList:RemoveLine(selectedLine)    
         end
     end
 
     -- Кнопка удаления Всех Записей
-    local removeButtonAll = vgui.Create("DButton", ply.EntityEditor)
+    local removeButtonAll = vgui.Create("DButton", ply.NPCEditor)
     removeButtonAll:SetSize(100, 25)
     removeButtonAll:SetPos(10, 800)
     removeButtonAll:SetText("Delete ALL!")
     removeButtonAll.DoClick = function()
-        local selectedLine = entityList:GetSelectedLine()
+        local selectedLine = npcList:GetSelectedLine()
         table.Empty(items)
-        entityList:Clear()
-        WriteItemsFileTR_Entity(ply, items)
+        npcList:Clear()
+        WriteItemsFileTR_NPC(ply, items)
     end
 end)

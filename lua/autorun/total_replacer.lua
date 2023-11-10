@@ -725,7 +725,7 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
                             if Class_NPC != "" and ent:GetNW2Bool("IsReplaced") != true then
                                 local newNPC = ents.Create(Class_NPC) -- or random_npc) ---- Стандартная замена, если не было отфильтрованно
                                 local owner = NPCOwners_TR[ent]
-                                newNPC:SetPos(ent:GetPos() + Vector(0, 0, 5))
+                                newNPC:SetPos(ent:GetPos() + Vector(0, 0, 25))
                                 newNPC:SetAngles(ent:GetAngles())
                                 newNPC:SetNW2Bool("IsReplaced", true)
 
