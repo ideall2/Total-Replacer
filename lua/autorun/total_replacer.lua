@@ -26,18 +26,13 @@ local weaponList = { -- Список с энтити для генерации �
     "weapon_stunstick",
     -- Добавьте другие строки
 }
-local vehicleList = {
-    "Airboat",
-    "Jeep",
-    "Pod",
-}
-
 local npcList = {
     "npc_crow",
     "npc_pigeon",
     "npc_seagull",
     "npc_metropolice",
-    "npc_combine_s"
+    "npc_combine_s",
+    "CombineElite",
 }
 local rebels_models = {
     "models/humans/group03/female_01.mdl",
@@ -144,7 +139,6 @@ end
 
 EntityOwners_TR = EntityOwners_TR or {}
 NPCOwners_TR = NPCOwners_TR or {} 
-VehicleOwners_TR = NPCOwners_TR or {} 
     -- Глобальная переменная. Очень долго не мог додуматься, как доебаться до создателя.
     -- Все это нужно для получения игрока создателя и присваиванию новому энтити и удаление gmod_undo.
  -- ДА СУКА. Я доебался до него!
@@ -154,9 +148,6 @@ hook.Add("PlayerSpawnedSENT", "SavingOwnerEntity", function(ply,ent) -- Тот �
 end)
 hook.Add("PlayerSpawnedNPC", "SavingOwnerNPC", function(ply,ent) -- Тот самый хук который берет создателя при спавне энтити из спавнменю
     NPCOwners_TR[ent] = ply
-end)
-hook.Add("PlayerSpawnedVehicle", "SavingOwnerVehicle", function(ply,ent) -- Тот самый хук который берет создателя при спавне энтити из спавнменю
-    VehicleOwners_TR[ent] = ply
 end)
 
 NPC_NameOld_TR = NULL
@@ -173,24 +164,6 @@ for k, v in pairs(allWeapons) do
         table.insert(allRandomWeapons, k)
     end
 end
-
-hook.Add("InitPostEntity", "NPCInfoPrinter", function()
-    if SERVER then
-        for _, npc in pairs(ents.FindByClass("npc_*")) do
-            if IsValid(npc) and npc:IsNPC() then
-                local keyValues = npc:GetKeyValues()
-                
-                if keyValues and keyValues["targetname"] then
-                    local targetname = keyValues["targetname"]
-                    print("NPC targetname: " .. targetname)
-                    print(npc:GetName())
-                else
-                    print("NPC does not have a targetname attribute.")
-                end
-            end
-        end
-    end
-end)
 hook.Add( "WeaponEquip", "WeaponReplaced", function( weapon, ply )
     if GetConVar("tr_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена
     if not table.HasValue(weaponList, weapon:GetClass()) then return end -- Нужно чтобы код не выполнялся если нет нужного энтити
@@ -276,21 +249,6 @@ for k, v in pairs(allNPCWeapons) do
     local weaponClass = v.class
     table.insert(allNPCWeapons_Random, weaponClass)
 end
-
--- Создаем таблицу для хранения имен NPC по их классам
-local npcNames = {}
-
--- Функция для сохранения имени NPC при его создании
-local function SaveNPCName(npc)
-    local npcClass = npc:GetClass()
-    local keyValues = npc:GetKeyValues()
-    local name = keyValues.Name -- Имя, как указано в Spawnmenu
-
-    if name then
-        npcNames[npcClass] = name
-    end
-end
-
 
 hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
     if GetConVar("tr_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена    
@@ -708,7 +666,7 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
                         -- ------------------- Шанс
                         local chance = math.random(1, 100)
                         if chance <= chance_npc then
-                            if Class_NPC != "" and ent:GetNW2Bool("IsReplaced") != true then
+                            if Class_NPC != "" and ent:GetNW2Bool("IsReplaced") != true and table.HasValue(npcList, ent:GetNW2String("Spawnmenu_name")) then
                                 local newNPC = ents.Create(Class_NPC) -- or random_npc) ---- Стандартная замена, если не было отфильтрованно
                                 local owner = NPCOwners_TR[ent]
                                 newNPC:SetPos(ent:GetPos() + Vector(0, 0, 25))
@@ -756,9 +714,12 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
     end
     ReplacingNPC_TR(ent)
     -- Проверка того, что энтити есть в списке Заменяемых а также разрешено ли заменять его
-        -- if GetConVar("tr_"..ent:GetClass()):GetBool() == true then
-        --     ReplacingNPC_TR(ent)
-        -- end
+    -- timer.Simple(0.02, function()
+    --     if GetConVar("tr_"..ent:GetNW2String("Spawnmenu_name")) == true then
+    --     --     ReplacingNPC_TR(ent)
+    --         print("11")
+    --     end
+    -- end)
 end)
 
 
