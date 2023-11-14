@@ -144,6 +144,7 @@ end
 
 EntityOwners_TR = EntityOwners_TR or {}
 NPCOwners_TR = NPCOwners_TR or {} 
+VehicleOwners_TR = NPCOwners_TR or {} 
     -- Глобальная переменная. Очень долго не мог додуматься, как доебаться до создателя.
     -- Все это нужно для получения игрока создателя и присваиванию новому энтити и удаление gmod_undo.
  -- ДА СУКА. Я доебался до него!
@@ -153,6 +154,9 @@ hook.Add("PlayerSpawnedSENT", "SavingOwnerEntity", function(ply,ent) -- Тот �
 end)
 hook.Add("PlayerSpawnedNPC", "SavingOwnerNPC", function(ply,ent) -- Тот самый хук который берет создателя при спавне энтити из спавнменю
     NPCOwners_TR[ent] = ply
+end)
+hook.Add("PlayerSpawnedVehicle", "SavingOwnerVehicle", function(ply,ent) -- Тот самый хук который берет создателя при спавне энтити из спавнменю
+    VehicleOwners_TR[ent] = ply
 end)
 
 NPC_NameOld_TR = NULL
@@ -335,24 +339,6 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
     -- Функция замены энтити при спавне, а также выдача прав с возможностью удаления с помощью Z если было заспавнено через спавнменю
     local function ReplacingNPC_TR(ent)
         if ent:IsNPC() and IsValid(ent) then -- Ничто кроме NPC
-            -- if SERVER then
-            --     local data_npc = ent:GetKeyValues()
-            --     PrintTable(data_npc)
-            -- end
-
-            -- PrintTable(ents.GetAll())
-            -- print(ent)
-            -- local ent_name = ent:GetClass()
-            -- PrintTable(ent)            
-            -- local count = table.Count(ent)
-            -- print("Количество элементов в таблице: " .. count)
-            
-            -- local keys = table.GetKeys(myTable)
-            -- print("Имена элементов в таблице:")
-            -- for _, key in pairs(keys) do
-            --     print(key)
-            -- end
-            
             -- Без таймера хрен заработает
             timer.Simple(0.01, function()
                 if IsValid(ent) and not ent:GetOwner():IsPlayer() and not ent:GetOwner():IsNPC() and ent:GetNW2Bool("IsReplaced") != true then

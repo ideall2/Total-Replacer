@@ -1,5 +1,12 @@
 local cur_table_tr_npc = ""
 local items = {}
+local weapons_NPC = {}
+local AllNPC_Weapons = list.Get("NPCUsableWeapons")
+
+for k, v in pairs(AllNPC_Weapons) do
+    local weaponClass = v.class
+    table.insert(weapons_NPC, weaponClass)
+end
 
 concommand.Add("tr_npc_menu", function(ply, cmd, args)
     local spawnmenu_border = GetConVar("spawnmenu_border")
@@ -386,19 +393,40 @@ concommand.Add("open_tr_menu_edit_npc", function(ply, cmd, args)
                 SetSettings:SetPos(100, 220)
                 SetSettings:SetText("Set Chance")
 
-                local textEntry = vgui.Create("DTextEntry", Additional_Settings)
-                textEntry:SetSize(280, 30)
-                textEntry:SetPos(10, 40)
+                local chance_NPC = vgui.Create("DTextEntry", Additional_Settings)
+                chance_NPC:SetSize(280, 30)
+                chance_NPC:SetPos(10, 80)
+                chance_NPC:SetText("100")
 
                 local dropDownList = vgui.Create("DComboBox", Additional_Settings)
                 dropDownList:SetPos(10, 150)
                 dropDownList:SetSize(280, 25)
+                dropDownList:AddChoice("standart", index)
+                dropDownList:AddChoice("none", index)
+                dropDownList:SetText("standart")
+
+                local text_chance_NPC = vgui.Create("DLabel", Additional_Settings)
+                text_chance_NPC:SetPos(50, 60)
+                text_chance_NPC:SetSize(200, 20)
+                text_chance_NPC:SetText("Set Chance of Spawn NPC")
+                text_chance_NPC:SetColor(Color(255, 255, 255))
+
+                local text_weapon_NPC = vgui.Create("DLabel", Additional_Settings)
+                text_weapon_NPC:SetPos(50, 125)
+                text_weapon_NPC:SetSize(200, 20)
+                text_weapon_NPC:SetText("Set Weapon of Spawn NPC")
+                text_weapon_NPC:SetColor(Color(255, 255, 255))
+
+                for index, value in ipairs(weapons_NPC) do
+                    dropDownList:AddChoice(value, index) -- Добавляем значение в падающий список с указанием индекса
+                end
 
                 SetSettings.DoClick = function()
                     local chance = textEntry:GetValue()
+                    local weapon_NPC = dropDownList:GetValue()
                     if not table.HasValue(items, AllNPC.NameKey.. ":"..chance) then
-                        table.insert(items, AllNPC.NameKey.. ":"..chance)
-                        npcList:AddLine(AllNPC.NameKey.. ":"..chance)
+                        table.insert(items, AllNPC.NameKey.. ":"..chance..":"..weapon_NPC)
+                        npcList:AddLine(AllNPC.NameKey.. ":"..chance..":"..weapon_NPC)
                         WriteItemsFileTR_NPC(ply, items)
                     end
                     Additional_Settings:Close()
