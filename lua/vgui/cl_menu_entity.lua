@@ -1,3 +1,93 @@
+local entityList = { -- Список с энтити для генерации консольных команд
+    "item_healthkit",
+    "item_healthvial",
+    "item_battery",
+    "item_ammo_smg1_grenade",
+    "item_ammo_357",
+    "item_ammo_357_large",
+    "item_ammo_ar2",
+    "item_ammo_ar2_large",
+    "item_ammo_ar2_altfire",
+    "combine_mine",
+    "item_ammo_crossbow",
+    "item_healthcharger",
+    "grenade_helicopter",
+    "item_suit",
+    "item_ammo_pistol",
+    "item_ammo_pistol_large",
+    "item_rpg_round",
+    "item_box_buckshot",
+    "item_ammo_smg1",
+    "item_ammo_smg1_large",
+    "item_suitcharger",
+    "prop_thumper",
+    "npc_grenade_frag",
+}
+
+local weaponList = { -- Список с энтити для генерации консольных команд
+    "weapon_357",
+    "weapon_pistol",
+    "weapon_bugbait",
+    "weapon_crossbow",
+    "weapon_crowbar",
+    "weapon_frag",
+    "weapon_physcannon",
+    "weapon_ar2",
+    "weapon_rpg",
+    "weapon_slam",
+    "weapon_shotgun",
+    "weapon_smg1",
+    "weapon_stunstick",
+    -- Добавьте другие строки
+}
+local npcList = { -- Список НПС для генерации консольных команд
+    "npc_crow",
+    "npc_pigeon",
+    "npc_seagull",
+    "npc_metropolice",
+    "npc_combine_s",
+    "CombineElite",
+    "npc_monk",
+    "npc_clawscanner",
+    "npc_combine_camera",
+    "npc_combinedropship",
+    "npc_combinegunship",
+    "npc_cscanner",
+    "npc_helicopter",
+    "npc_manhack",
+    "npc_rollermine",
+    "npc_strider",
+    "npc_turret_ceiling",
+    "npc_turret_floor",
+    "CombinePrison",
+    "PrisonShotgunner",
+    "ShotgunSoldier",
+    "npc_alyx",
+    "npc_barney",
+    "npc_breen",
+    "npc_citizen",
+    "npc_dog",
+    "npc_eli",
+    "npc_gman",
+    "npc_kleiner",
+    "npc_mossman",
+    "npc_vortigaunt",
+    "npc_odessa",
+    "Rebel",
+    "Medic",
+    "Refugee",
+    "VortigauntSlave",
+    "npc_antlion",
+    "npc_antlionguard",
+    "npc_fastzombie",
+    "npc_fastzombie_torso",
+    "npc_headcrab",
+    "npc_headcrab_black",
+    "npc_headcrab_fast",
+    "npc_poisonzombie",
+    "npc_zombie",
+    "npc_zombie_torso",
+}
 
 concommand.Add("tr_menu", function(ply, cmd, args)
     -- Функция для создания меню
@@ -20,37 +110,35 @@ concommand.Add("tr_menu", function(ply, cmd, args)
         local button2 = vgui.Create("DButton", frame)
         button2:SetPos(10, 70)
         button2:SetSize(280, 30)
-        button2:SetText("Команда 2")
+        button2:SetText("Replace NPCs")
         button2.DoClick = function()
             -- Здесь вы можете указать консольную команду для кнопки 2
-            LocalPlayer():ConCommand("your_command2")
+            LocalPlayer():ConCommand("tr_npc_menu")
             frame:Close()
         end
 
         local button3 = vgui.Create("DButton", frame)
         button3:SetPos(10, 110)
         button3:SetSize(280, 30)
-        button3:SetText("Команда 3")
+        button3:SetText("Replace Weapons")
         button3.DoClick = function()
             -- Здесь вы можете указать консольную команду для кнопки 3
-            LocalPlayer():ConCommand("your_command3")
+            LocalPlayer():ConCommand("tr_weapon_menu")
             frame:Close()
         end
 
         local button4 = vgui.Create("DButton", frame)
         button4:SetPos(10, 150)
         button4:SetSize(280, 30)
-        button4:SetText("Команда 4")
+        button4:SetText("Replace Vehicle(In WIP)")
         button4.DoClick = function()
             -- Здесь вы можете указать консольную команду для кнопки 4
-            LocalPlayer():ConCommand("your_command4")
+            LocalPlayer():ChatPrint("Hi! Sorry. Vehicle Replacer is in WIP and you can't open this menu. Please wait until I finish it.")
             frame:Close()
         end
 
         frame:MakePopup()
     end
-
-    -- Запускаем функцию для создания меню
     CreateMenu()
 end)
 
@@ -60,8 +148,22 @@ local function TR_SettingsPanel(Panel)
         RunConsoleCommand("tr_entity_menu")
     end
     Panel:AddControl("CheckBox", {Label = "Enable Total Replacer", Command = "tr_enable"})
-    Panel:ControlHelp("When enabled, Entity will change immediately after spawning, as well as after falling from NPCs. Be sure to fill all tables with Entitys otherwise Entitys will spawn in huge numbers in one point. I warned you. Be careful.")
-
+    Panel:AddControl("CheckBox", {Label = "Enable Total Replacer for Entities", Command = "tr_entity_enable"})
+    Panel:AddControl("CheckBox", {Label = "Enable Total Replacer for NPCs", Command = "tr_npc_enable"})
+    Panel:AddControl("CheckBox", {Label = "Enable Total Replacer for Weapons", Command = "tr_weapon_enable"})
+    Panel:Help("Entities Replacing")
+    for key, value in pairs(entityList) do
+        Panel:AddControl("CheckBox", {Label = "Enable TR for Entities: "..value, Command = "tr_"..value})
+    end
+    Panel:Help("NPCs Replacing")
+    for key, value in pairs(npcList) do
+        Panel:AddControl("CheckBox", {Label = "Enable TR for NPCs: "..value, Command = "tr_"..value})
+    end
+    Panel:Help("Weapons Replacing")
+    for key, value in pairs(weaponList) do
+        Panel:AddControl("CheckBox", {Label = "Enable TR for Weapons: "..value, Command = "tr_"..value})
+    end
+    Panel:Help("Authors: IDEALL")
 end
 
 local function TR_SettingsPaneladd()

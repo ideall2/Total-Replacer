@@ -1,13 +1,34 @@
 
 
-CreateConVar("tr_enable", 1, FCVAR_ARCHIVE,"Enable Total Entity Replacer?", 0, 1 )
+CreateConVar("tr_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer?", 0, 1 )
+CreateConVar("tr_weapon_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for Weapons?", 0, 1 )
+CreateConVar("tr_npc_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for NPCs?", 0, 1 )
+CreateConVar("tr_entity_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for Entities?", 0, 1 )
 
 local entityList = { -- Список с энтити для генерации консольных команд
     "item_healthkit",
     "item_healthvial",
     "item_battery",
     "item_ammo_smg1_grenade",
-    -- Добавьте другие строки
+    "item_ammo_357",
+    "item_ammo_357_large",
+    "item_ammo_ar2",
+    "item_ammo_ar2_large",
+    "item_ammo_ar2_altfire",
+    "combine_mine",
+    "item_ammo_crossbow",
+    "item_healthcharger",
+    "grenade_helicopter",
+    "item_suit",
+    "item_ammo_pistol",
+    "item_ammo_pistol_large",
+    "item_rpg_round",
+    "item_box_buckshot",
+    "item_ammo_smg1",
+    "item_ammo_smg1_large",
+    "item_suitcharger",
+    "prop_thumper",
+    "npc_grenade_frag",
 }
 
 local weaponList = { -- Список с энтити для генерации консольных команд
@@ -26,15 +47,55 @@ local weaponList = { -- Список с энтити для генерации �
     "weapon_stunstick",
     -- Добавьте другие строки
 }
-local npcList = {
+local npcList = { -- Список НПС для генерации консольных команд
     "npc_crow",
     "npc_pigeon",
     "npc_seagull",
     "npc_metropolice",
     "npc_combine_s",
     "CombineElite",
+    "npc_monk",
+    "npc_clawscanner",
+    "npc_combine_camera",
+    "npc_combinedropship",
+    "npc_combinegunship",
+    "npc_cscanner",
+    "npc_helicopter",
+    "npc_manhack",
+    "npc_rollermine",
+    "npc_strider",
+    "npc_turret_ceiling",
+    "npc_turret_floor",
+    "CombinePrison",
+    "PrisonShotgunner",
+    "ShotgunSoldier",
+    "npc_alyx",
+    "npc_barney",
+    "npc_breen",
+    "npc_citizen",
+    "npc_dog",
+    "npc_eli",
+    "npc_gman",
+    "npc_kleiner",
+    "npc_mossman",
+    "npc_vortigaunt",
+    "npc_odessa",
+    "Rebel",
+    "Medic",
+    "Refugee",
+    "VortigauntSlave",
+    "npc_antlion",
+    "npc_antlionguard",
+    "npc_fastzombie",
+    "npc_fastzombie_torso",
+    "npc_headcrab",
+    "npc_headcrab_black",
+    "npc_headcrab_fast",
+    "npc_poisonzombie",
+    "npc_zombie",
+    "npc_zombie_torso",
 }
-local rebels_models = {
+local rebels_models = { -- Модели НПС
     "models/humans/group03/female_01.mdl",
     "models/humans/group03/female_02.mdl",
     "models/humans/group03/female_03.mdl",
@@ -51,7 +112,7 @@ local rebels_models = {
     "models/humans/group03/male_09.mdl",
 }
 
-local refugee_models = {
+local refugee_models = { -- Модели НПС
     "models/humans/group02/female_01.mdl",
     "models/humans/group02/female_02.mdl",
     "models/humans/group02/female_03.mdl",
@@ -67,7 +128,7 @@ local refugee_models = {
     "models/humans/group02/male_08.mdl",
     "models/humans/group02/male_09.mdl",
 }
-local medic_models = {
+local medic_models = { -- Модели НПС
     "models/humans/group03m/female_01.mdl",
     "models/humans/group03m/female_02.mdl",
     "models/humans/group03m/female_03.mdl",
@@ -83,7 +144,7 @@ local medic_models = {
     "models/humans/group03m/male_08.mdl",
     "models/humans/group03m/male_09.mdl",
 }
-local citizen_models = {
+local citizen_models = { -- Модели НПС
     "models/humans/group01/female_01.mdl",
     "models/humans/group01/female_02.mdl",
     "models/humans/group01/female_03.mdl",
@@ -99,12 +160,6 @@ local citizen_models = {
     "models/humans/group01/male_08.mdl",
     "models/humans/group01/male_09.mdl",
 }
-
-local npcWeaponizedList = {
-    "npc_metropolice",
-}
-
--- Функция для замены оружия у НПС
 local standartWeaponNPC = {
     "weapon_pistol",
     "weapon_357",
@@ -117,24 +172,16 @@ local standartWeaponNPC = {
     "weapon_rpg",
 }
 
-local ExceptionsNPCWeapon = {
-    "npc_crow",
-    "npc_pigeon",
-    "npc_seagull",
-    "npc_zombie"
-}
-
-
 for _, str in pairs(entityList) do -- Создает консольные команды для ограничения спавна энтити
-    CreateConVar("tr_"..str, 1, FCVAR_ARCHIVE,"Enable replacer for"..str, 0, 1 )
+    CreateConVar("tr_"..str, 1, FCVAR_ARCHIVE,"Enable replacer for "..str, 0, 1 )
 end
 
 for _, str in pairs(weaponList) do -- Создает консольные команды для ограничения спавна энтити
-    CreateConVar("tr_"..str, 1, FCVAR_ARCHIVE,"Enable replacer for"..str, 0, 1 )
+    CreateConVar("tr_"..str, 1, FCVAR_ARCHIVE,"Enable replacer for "..str, 0, 1 )
 end
 
 for _, str in pairs(npcList) do -- Создает консольные команды для ограничения спавна энтити
-    CreateConVar("tr_"..str, 1, FCVAR_ARCHIVE,"Enable replacer for"..str, 0, 1 )
+    CreateConVar("tr_"..str, 1, FCVAR_ARCHIVE,"Enable replacer for "..str, 0, 1 )
 end
 
 EntityOwners_TR = EntityOwners_TR or {}
@@ -166,6 +213,7 @@ for k, v in pairs(allWeapons) do
 end
 hook.Add( "WeaponEquip", "WeaponReplaced", function( weapon, ply )
     if GetConVar("tr_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена
+    if GetConVar("tr_weapon_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена
     if not table.HasValue(weaponList, weapon:GetClass()) then return end -- Нужно чтобы код не выполнялся если нет нужного энтити
     ------------------------ Общее
 
@@ -251,24 +299,8 @@ for k, v in pairs(allNPCWeapons) do
 end
 
 hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
-    if GetConVar("tr_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена    
-    local function CheckedNPCWeaponException_TR(exception_npc) 
-        local nameNPC = ent:GetClass()
-        local targetString = nameNPC
-
-        -- Флаг для отслеживания, была ли найдена нужная строка
-        local stringFound = false
-        -- Перебор списка строк и поиск нужной строки
-        for _, str in pairs(ExceptionsNPCWeapon) do
-            if str != targetString then
-                stringFound = true
-                exception_npc = targetString
-                return true
-            end
-        end
-        return false
-    end
-    
+    if GetConVar("tr_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена       
+    if GetConVar("tr_npc_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена 
     ------ Функиции для чтения с разных таблиц из папки data
     local function ReadItemsFile_TR_npc(NPC_NameOld_TR, ply)
         local content = file.Read("total_npc_replacer/"..NPC_NameOld_TR.. ".txt", "DATA")
@@ -666,7 +698,8 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
                         -- ------------------- Шанс
                         local chance = math.random(1, 100)
                         if chance <= chance_npc then
-                            if Class_NPC != "" and ent:GetNW2Bool("IsReplaced") != true and table.HasValue(npcList, ent:GetNW2String("Spawnmenu_name")) then
+                            local name_NW2_NPC = ent:GetNW2String("Spawnmenu_name")
+                            if Class_NPC != "" and ent:GetNW2Bool("IsReplaced") != true and table.HasValue(npcList, ent:GetNW2String("Spawnmenu_name")) and GetConVar("tr_"..name_NW2_NPC):GetBool() == true then
                                 local newNPC = ents.Create(Class_NPC) -- or random_npc) ---- Стандартная замена, если не было отфильтрованно
                                 local owner = NPCOwners_TR[ent]
                                 newNPC:SetPos(ent:GetPos() + Vector(0, 0, 25))
@@ -713,18 +746,12 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
         end
     end
     ReplacingNPC_TR(ent)
-    -- Проверка того, что энтити есть в списке Заменяемых а также разрешено ли заменять его
-    -- timer.Simple(0.02, function()
-    --     if GetConVar("tr_"..ent:GetNW2String("Spawnmenu_name")) == true then
-    --     --     ReplacingNPC_TR(ent)
-    --         print("11")
-    --     end
-    -- end)
 end)
 
 
 hook.Add("OnEntityCreated", "ReplacingEntity", function(ent) -- При создании энтити тотально проверяет а также заполняет таблицы со всеми энтити(пока только из вкладки Энтити)
     if GetConVar("tr_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена
+    if GetConVar("tr_entity_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена
     if not table.HasValue(entityList, ent:GetClass()) then return end -- Нужно чтобы код не выполнялся если нет нужного энтити
             ------------------------ Общее
     local allSpawnableEntities = list.Get("SpawnableEntities") -- Получает весь список энтити из спавнменю которое есть в игре (И даже недоступные для спавна)
