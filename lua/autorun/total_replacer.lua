@@ -1,9 +1,12 @@
 
 
 CreateConVar("tr_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer?", 0, 1 )
+CreateConVar("tr_enable_randomize_weapons", 1, FCVAR_ARCHIVE,"Enable Randomizer for empty Weapons?", 0, 1 )
+CreateConVar("tr_enable_randomize_entities", 1, FCVAR_ARCHIVE,"Enable Randomizer for empty Entities?", 0, 1 )
 CreateConVar("tr_weapon_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for Weapons?", 0, 1 )
 CreateConVar("tr_npc_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for NPCs?", 0, 1 )
 CreateConVar("tr_entity_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for Entities?", 0, 1 )
+CreateConVar("tr_vehicle_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for Vehicles?", 0, 1 )
 
 local entityList = { -- Список с энтити для генерации консольных команд
     "item_healthkit",
@@ -46,6 +49,10 @@ local weaponList = { -- Список с энтити для генерации �
     "weapon_smg1",
     "weapon_stunstick",
     -- Добавьте другие строки
+}
+local vehicleList = {
+    "Jeep",
+    "Airboat"
 }
 local npcList = { -- Список НПС для генерации консольных команд
     "npc_crow",
@@ -184,8 +191,13 @@ for _, str in pairs(npcList) do -- Создает консольные кома�
     CreateConVar("tr_"..str, 1, FCVAR_ARCHIVE,"Enable replacer for "..str, 0, 1 )
 end
 
+for _, str in pairs(vehicleList) do -- Создает консольные команды для ограничения спавна энтити
+    CreateConVar("tr_"..str, 1, FCVAR_ARCHIVE,"Enable replacer for "..str, 0, 1 )
+end
+
 EntityOwners_TR = EntityOwners_TR or {}
-NPCOwners_TR = NPCOwners_TR or {} 
+NPCOwners_TR = NPCOwners_TR or {}
+VEHICLEOwners_TR = VEHICLEOwners_TR or {} 
     -- Глобальная переменная. Очень долго не мог додуматься, как доебаться до создателя.
     -- Все это нужно для получения игрока создателя и присваиванию новому энтити и удаление gmod_undo.
  -- ДА СУКА. Я доебался до него!
@@ -195,6 +207,9 @@ hook.Add("PlayerSpawnedSENT", "SavingOwnerEntity", function(ply,ent) -- Тот �
 end)
 hook.Add("PlayerSpawnedNPC", "SavingOwnerNPC", function(ply,ent) -- Тот самый хук который берет создателя при спавне энтити из спавнменю
     NPCOwners_TR[ent] = ply
+end)
+hook.Add("PlayerSpawnedVehicle", "SavingOwnerVehicle", function(ply,ent) -- Тот самый хук который берет создателя при спавне энтити из спавнменю
+    VEHICLEOwners_TR[ent] = ply
 end)
 
 NPC_NameOld_TR = NULL
@@ -249,12 +264,19 @@ hook.Add( "WeaponEquip", "WeaponReplaced", function( weapon, ply )
                     ---- Перебор, преобразование строк в нужный формат
                     local randomWeapon_table = allRandomWeapons[math.random(#allRandomWeapons)] 
                     local list_weapon = ReadItemsFile_TR_weapon(weapon)
-                    local current_weapon = list_weapon[math.random(#list_weapon)] or randomWeapon_table
+                    local current_weapon = list_weapon[math.random(#list_weapon)]
+
+                    if current_weapon == nil and GetConVar("tr_enable_randomize_weapons"):GetBool() == true then
+                        current_weapon = randomWeapon_table
+                    end
                     ---- Обработка строки: запись выглядит примерно так: "sent_ball:100". sent_ball - имя энтити
                     ---- и 100 - шанс выпадения. Двоиточие разделяет. Но без обработки она как одна строка.
                     ---- Дальше идет разделение с условием. Результаты в name_weapon и chance_weapon. Если только имя 
                     ---- То просто имя будет и все
                     local dataString = current_weapon
+                    if dataString == nil then
+                        dataString = "clear:100"
+                    end
                     local parts = string.Explode(":", dataString)
                     local name_weapon = string.Trim(parts[1])
                     local startIndex, endIndex = string.find(dataString, ":")
@@ -269,13 +291,14 @@ hook.Add( "WeaponEquip", "WeaponReplaced", function( weapon, ply )
                     local chance = math.random(1, 100)
                     if chance <= chance_weapon then
                         local newWeapon = name_weapon
-                        ply:StripWeapon(CheckedWeapon_TR())
-                        ply:Give(newWeapon)
+                        if newWeapon != "clear" then
+                            ply:StripWeapon(CheckedWeapon_TR())
+                            ply:Give(newWeapon)
+                        end
                         break
                     else
                         -- В противном случае, продолжаем выполнение цикла
                     end
-
                 end
             end
         end)
@@ -658,11 +681,9 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
                                 end
                                 if value.Weapons and weapon_npc == "standart" then
                                     Weapons_NPC = value.Weapons[math.random(#value.Weapons)]
-                                    -- print(Weapons_NPC)
                                 end
                                 if weapon_npc != "standart" and weapon_npc != "" then
                                     Weapons_NPC = weapon_npc
-                                    -- print(Weapons_NPC)
                                 end
                                     if value.KeyValues then
                                         for key, value in pairs(value.KeyValues) do
@@ -796,12 +817,18 @@ hook.Add("OnEntityCreated", "ReplacingEntity", function(ent) -- При созд�
                         ---- Перебор, преобразование строк в нужный формат
                         local randomEntity_table = allRandomEntities[math.random(#allRandomEntities)] 
                         local list_entity = ReadItemsFile_TR_entity(ent)
-                        local current_entity = list_entity[math.random(#list_entity)] or randomEntity_table
+                        local current_entity = list_entity[math.random(#list_entity)]
+                        if current_entity == nil and GetConVar("tr_enable_randomize_entities"):GetBool() == true then
+                            current_entity = randomEntity_table
+                        end
                         ---- Обработка строки: запись выглядит примерно так: "sent_ball:100". sent_ball - имя энтити
                         ---- и 100 - шанс выпадения. Двоиточие разделяет. Но без обработки она как одна строка.
                         ---- Дальше идет разделение с условием. Результаты в name_entity и chance_entity. Если только имя 
                         ---- То просто имя будет и все
                         local dataString = current_entity
+                        if dataString == nil then
+                            dataString = "clear:100"
+                        end
                         local parts = string.Explode(":", dataString)
                         local name_entity = string.Trim(parts[1])
                         local startIndex, endIndex = string.find(dataString, ":")
@@ -815,22 +842,23 @@ hook.Add("OnEntityCreated", "ReplacingEntity", function(ent) -- При созд�
                         ------------------- Шанс
                         local chance = math.random(1, 100)
                         if chance <= chance_entity then
-                            local newEntity = ents.Create(name_entity)
-                            local owner = EntityOwners_TR[ent]
-
-                            newEntity:SetPos(ent:GetPos())
-                            newEntity:SetAngles(ent:GetAngles())
-                            newEntity:Spawn()
-                            newEntity:Activate()
-                            newEntity:SetOwner(owner)
-
-                            local nameEnts = newEntity:GetClass() -- Преобразование в название энтити
-                            local undoName = "Replaced Entity: "..nameEnts -- Удаляемое имя и конкретное название энтити
-                            undo.Create(undoName) -- Все для работы с Undo и соответсвенно с Z клавишей
-                            undo.AddEntity(newEntity) -- Все для работы с Undo и соответсвенно с Z клавишей
-                            undo.SetPlayer(owner) -- Присваивание игроку предмет
-                            undo.Finish() -- Наконец можно удалить этот энтити. Не зря ебался с этой хуйней
-                            ent:Remove() -- удаляем энтити
+                            if name_entity != "clear" then
+                                local newEntity = ents.Create(name_entity)
+                                local owner = EntityOwners_TR[ent]
+                                newEntity:SetPos(ent:GetPos())
+                                newEntity:SetAngles(ent:GetAngles())
+                                newEntity:Spawn()
+                                newEntity:Activate()
+                                newEntity:SetOwner(owner)
+                                ent:Remove() -- удаляем энтити
+                                
+                                local nameEnts = newEntity:GetClass() -- Преобразование в название энтити
+                                local undoName = "Replaced Entity: "..nameEnts -- Удаляемое имя и конкретное название энтити
+                                undo.Create(undoName) -- Все для работы с Undo и соответсвенно с Z клавишей
+                                undo.AddEntity(newEntity) -- Все для работы с Undo и соответсвенно с Z клавишей
+                                undo.SetPlayer(owner) -- Присваивание игроку предмет
+                                undo.Finish() -- Наконец можно удалить этот энтити. Не зря ебался с этой хуйней
+                            end
                             break
                         else
                             -- В противном случае, продолжаем выполнение цикла
@@ -844,4 +872,149 @@ hook.Add("OnEntityCreated", "ReplacingEntity", function(ent) -- При созд�
         if CheckedEntity_TR() and GetConVar("tr_"..ent:GetClass()):GetBool() == true then
             ReplacingEntity_TR(ent)
         end
+end)
+
+local allVEHICLE = list.Get("Vehicles") -- Получает весь список энтити из спавнменю которое есть в игре (И даже недоступные для спавна)
+
+hook.Add("OnEntityCreated", "ReplacingVEHICLE", function(ent)
+    if GetConVar("tr_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена       
+    if GetConVar("tr_vehicle_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена 
+    ------ Функиции для чтения с разных таблиц из папки data
+    local function ReadItemsFile_TR_vehicle(VEHICLE_NameOld_TR, ply)
+        local content = file.Read("total_vehicle_replacer/"..VEHICLE_NameOld_TR.. ".txt", "DATA")
+        if content then
+            return util.JSONToTable(content) or {}
+        else
+            return {}
+        end
+    end
+    -- Функция замены энтити при спавне, а также выдача прав с возможностью удаления с помощью Z если было заспавнено через спавнменю
+    local function ReplacingVEHICLE_TR(ent)
+        if ent:IsVehicle() and IsValid(ent) then -- Ничто кроме VEHICLE
+            -- Без таймера хрен заработает
+            timer.Simple(0.01, function()
+                if IsValid(ent) and not ent:GetOwner():IsPlayer() and not ent:GetOwner():IsVehicle() and ent:GetNW2Bool("IsReplaced") != true then
+                    local Model_name_Vehicle = ent:GetModel()
+                    -- print(ent:GetClass())
+                    if Model_name_Vehicle == "models/buggy.mdl" and ent:GetClass() == "prop_vehicle_jeep" then
+                        -- print("Buggy")
+                        ent:SetNW2String("Spawnmenu_name", "Jeep")
+                    end
+                    if Model_name_Vehicle == "models/airboat.mdl" and ent:GetClass() == "prop_vehicle_airboat" then
+                        ent:SetNW2String("Spawnmenu_name", "Airboat")
+                    end
+                    local Name_VEHICLE = ""
+                    local Class_VEHICLE = ""
+                    local keyValues_VEHICLE = {}
+                    local Model_VEHICLE = ""
+                    local SpawnFlags_VEHICLE = ""
+                    local Skin_VEHICLE = 0
+                    local OffSet_VEHICLE = 0
+                    local Spawnmenu_name_VEHICLE = ""
+                    for key, value in pairs(allVEHICLE) do
+                        if key == ent:GetNW2String("Spawnmenu_name") then
+                            Spawnmenu_name_VEHICLE = key
+                            break
+                        end
+                    end
+
+                    while true do
+                        local ContentVEHICLE = ReadItemsFile_TR_vehicle(Spawnmenu_name_VEHICLE)
+                        local ContentVEHICLE_Choosed = ContentVEHICLE[math.random(#ContentVEHICLE)]
+
+                        local vehicle_pattern = "([^:]+):([^:]+)"
+                        local vehicle_name, chance_vehicle_str = nil, nil
+                        if ContentVEHICLE_Choosed != nil then
+                            vehicle_name, chance_vehicle_str, weapon_vehicle = string.match(ContentVEHICLE_Choosed, vehicle_pattern)
+                        end
+                        for key, value in pairs(allVEHICLE) do
+                            if key == vehicle_name then
+                                if value.Class then
+                                    Class_VEHICLE = value.Class
+                                end
+                                if value.Name then
+                                    Name_VEHICLE = value.Name
+                                end
+                                if value.Weapons and weapon_vehicle == "standart" then
+                                    Weapons_VEHICLE = value.Weapons[math.random(#value.Weapons)]
+                                end
+                                if weapon_vehicle != "standart" and weapon_vehicle != "" then
+                                    Weapons_VEHICLE = weapon_vehicle
+                                end
+                                    if value.KeyValues then
+                                        for key, value in pairs(value.KeyValues) do
+                                            keyValues_VEHICLE[key] = value
+                                        end
+                                    end
+                                if value.Model then
+                                    Model_VEHICLE = value.Model
+                                end
+                                if value.SpawnFlags then
+                                    SpawnFlags_VEHICLE = value.SpawnFlags
+                                end
+                                if value.Offset then
+                                    OffSet_VEHICLE = value.Offset
+                                end
+                                if value.Skin then
+                                    Skin_VEHICLE = value.Skin
+                                end
+                                break
+                            end
+                        end
+
+                        local RandVEHICLE = allVEHICLE[math.random(#allVEHICLE)]
+                        local RandomFromAllVEHICLE = table.Random(allVEHICLE)
+
+                        local chance_vehicle = 100
+                        if chance_vehicle_str != nil then
+                            chance_vehicle = tonumber(chance_vehicle_str)
+                        end
+                        -- ------------------- Шанс
+                        local chance = math.random(1, 100)
+                        if chance <= chance_vehicle then
+                            local name_NW2_VEHICLE = ent:GetNW2String("Spawnmenu_name")
+                            if Class_VEHICLE != "" and ent:GetNW2Bool("IsReplaced") != true and table.HasValue(vehicleList, ent:GetNW2String("Spawnmenu_name")) and GetConVar("tr_"..name_NW2_VEHICLE):GetBool() == true then
+                                local newVEHICLE = ents.Create(Class_VEHICLE) -- or random_vehicle) ---- Стандартная замена, если не было отфильтрованно
+                                local owner = VEHICLEOwners_TR[ent]
+                                newVEHICLE:SetPos(ent:GetPos() + Vector(0, 0, 25))
+                                newVEHICLE:SetAngles(ent:GetAngles())
+                                newVEHICLE:SetNW2Bool("IsReplaced", true)
+
+                                if Name_VEHICLE != "" then
+                                    newVEHICLE:SetName(Name_VEHICLE)
+                                end
+                                for key, value in pairs(keyValues_VEHICLE) do
+                                    newVEHICLE:SetKeyValue(key, value)
+                                end
+                                if Skin_VEHICLE != "" then
+                                    newVEHICLE:SetSkin(Skin_VEHICLE)
+                                end
+                                if SpawnFlags_VEHICLE != "" then
+                                    newVEHICLE:SetKeyValue("spawnflags",bit.bor(SpawnFlags_VEHICLE))
+                                end
+                                if Model_VEHICLE != "" then
+                                    newVEHICLE:SetModel(Model_VEHICLE)
+                                end
+                                newVEHICLE:Spawn()
+                                newVEHICLE:Activate()
+                                local nameEnts = newVEHICLE:GetClass() -- Преобразование в название энтити
+                                local undoName = "Replaced VEHICLE: "..nameEnts -- Удаляемое имя и конкретное название энтити
+                                undo.Create(undoName) -- Все для работы с Undo и соответсвенно с Z клавишей
+                                undo.AddEntity(newVEHICLE) -- Все для работы с Undo и соответсвенно с Z клавишей
+                                undo.SetPlayer(owner) -- Присваивание игроку предмет
+                                undo.Finish() -- Наконец можно удалить этот энтити. Не зря ебался с этой хуйней
+                                ent:Remove() -- удаляем энтити
+                                break
+                            else
+                                break -- Это нужно для того чтобы в бесконечный цикл не ушел,
+                                -- И тем самым не завис GMOD
+                            end
+                        end
+                    end
+                end
+            end)
+            
+        end
+    end
+    ReplacingVEHICLE_TR(ent)
 end)
