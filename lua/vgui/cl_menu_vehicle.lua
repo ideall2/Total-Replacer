@@ -1,180 +1,8 @@
-local entityList = { -- Список с энтити для генерации консольных команд
-    "item_healthkit",
-    "item_healthvial",
-    "item_battery",
-    "item_ammo_smg1_grenade",
-    "item_ammo_357",
-    "item_ammo_357_large",
-    "item_ammo_ar2",
-    "item_ammo_ar2_large",
-    "item_ammo_ar2_altfire",
-    "combine_mine",
-    "item_ammo_crossbow",
-    "item_healthcharger",
-    "grenade_helicopter",
-    "item_suit",
-    "item_ammo_pistol",
-    "item_ammo_pistol_large",
-    "item_rpg_round",
-    "item_box_buckshot",
-    "item_ammo_smg1",
-    "item_ammo_smg1_large",
-    "item_suitcharger",
-    "prop_thumper",
-    "npc_grenade_frag",
-}
 
-local weaponList = { -- Список с энтити для генерации консольных команд
-    "weapon_357",
-    "weapon_pistol",
-    "weapon_bugbait",
-    "weapon_crossbow",
-    "weapon_crowbar",
-    "weapon_frag",
-    "weapon_physcannon",
-    "weapon_ar2",
-    "weapon_rpg",
-    "weapon_slam",
-    "weapon_shotgun",
-    "weapon_smg1",
-    "weapon_stunstick",
-    -- Добавьте другие строки
-}
-local npcList = { -- Список НПС для генерации консольных команд
-    "npc_crow",
-    "npc_pigeon",
-    "npc_seagull",
-    "npc_metropolice",
-    "npc_combine_s",
-    "CombineElite",
-    "npc_monk",
-    "npc_clawscanner",
-    "npc_combine_camera",
-    "npc_combinedropship",
-    "npc_combinegunship",
-    "npc_cscanner",
-    "npc_helicopter",
-    "npc_manhack",
-    "npc_rollermine",
-    "npc_strider",
-    "npc_turret_ceiling",
-    "npc_turret_floor",
-    "CombinePrison",
-    "PrisonShotgunner",
-    "ShotgunSoldier",
-    "npc_alyx",
-    "npc_barney",
-    "npc_breen",
-    "npc_citizen",
-    "npc_dog",
-    "npc_eli",
-    "npc_gman",
-    "npc_kleiner",
-    "npc_mossman",
-    "npc_vortigaunt",
-    "npc_odessa",
-    "Rebel",
-    "Medic",
-    "Refugee",
-    "VortigauntSlave",
-    "npc_antlion",
-    "npc_antlionguard",
-    "npc_fastzombie",
-    "npc_fastzombie_torso",
-    "npc_headcrab",
-    "npc_headcrab_black",
-    "npc_headcrab_fast",
-    "npc_poisonzombie",
-    "npc_zombie",
-    "npc_zombie_torso",
-}
+local cur_table_tr_vehicle = ""
+local items_swep = {}
 
-concommand.Add("tr_menu", function(ply, cmd, args)
-    -- Функция для создания меню
-    local function CreateMenu()
-        local frame = vgui.Create("DFrame")
-        frame:SetSize(300, 200)
-        frame:SetTitle("Welcome to Total Replacer.")
-        frame:Center()
-
-        local button1 = vgui.Create("DButton", frame)
-        button1:SetPos(10, 30)
-        button1:SetSize(280, 30)
-        button1:SetText("Replace Entities")
-        button1.DoClick = function()
-            -- Здесь вы можете указать консольную команду для кнопки 1
-            LocalPlayer():ConCommand("tr_entity_menu")
-            frame:Close()
-        end
-
-        local button2 = vgui.Create("DButton", frame)
-        button2:SetPos(10, 70)
-        button2:SetSize(280, 30)
-        button2:SetText("Replace NPCs")
-        button2.DoClick = function()
-            -- Здесь вы можете указать консольную команду для кнопки 2
-            LocalPlayer():ConCommand("tr_npc_menu")
-            frame:Close()
-        end
-
-        local button3 = vgui.Create("DButton", frame)
-        button3:SetPos(10, 110)
-        button3:SetSize(280, 30)
-        button3:SetText("Replace Weapons")
-        button3.DoClick = function()
-            -- Здесь вы можете указать консольную команду для кнопки 3
-            LocalPlayer():ConCommand("tr_weapon_menu")
-            frame:Close()
-        end
-
-        local button4 = vgui.Create("DButton", frame)
-        button4:SetPos(10, 150)
-        button4:SetSize(280, 30)
-        button4:SetText("Replace Vehicle")
-        button4.DoClick = function()
-            -- Здесь вы можете указать консольную команду для кнопки 4
-            LocalPlayer():ConCommand("tr_vehicle_menu")
-            frame:Close()
-        end
-        frame:MakePopup()
-    end
-    CreateMenu()
-end)
-
-local function TR_SettingsPanel(Panel)
-    local openMenuButton = Panel:Button("Open TR")
-    openMenuButton.DoClick = function()
-        RunConsoleCommand("tr_entity_menu")
-    end
-    Panel:AddControl("CheckBox", {Label = "Enable Total Replacer", Command = "tr_enable"})
-    Panel:AddControl("CheckBox", {Label = "Enable Total Replacer for Entities", Command = "tr_entity_enable"})
-    Panel:AddControl("CheckBox", {Label = "Enable Total Replacer for NPCs", Command = "tr_npc_enable"})
-    Panel:AddControl("CheckBox", {Label = "Enable Total Replacer for Weapons", Command = "tr_weapon_enable"})
-    Panel:Help("Entities Replacing")
-    for key, value in pairs(entityList) do
-        Panel:AddControl("CheckBox", {Label = "Enable TR for Entities: "..value, Command = "tr_"..value})
-    end
-    Panel:Help("NPCs Replacing")
-    for key, value in pairs(npcList) do
-        Panel:AddControl("CheckBox", {Label = "Enable TR for NPCs: "..value, Command = "tr_"..value})
-    end
-    Panel:Help("Weapons Replacing")
-    for key, value in pairs(weaponList) do
-        Panel:AddControl("CheckBox", {Label = "Enable TR for Weapons: "..value, Command = "tr_"..value})
-    end
-    Panel:Help("Authors: IDEALL")
-end
-
-local function TR_SettingsPaneladd()
-	spawnmenu.AddToolMenuOption("Options", "Total Replacer", "TR", "TR menu", "", "", TR_SettingsPanel)
-end
-
-hook.Add("PopulateToolMenu", "TR_SettingsPanel", TR_SettingsPaneladd)
-
-local cur_table_tr_entity = ""
-local items = {}
-
-concommand.Add("tr_entity_menu", function(ply, cmd, args)
+concommand.Add("tr_vehicle_menu", function(ply, cmd, args)
     local spawnmenu_border = GetConVar("spawnmenu_border")
     local MarginX = math.Clamp((ScrW() - 1024) * math.max(0.1, spawnmenu_border:GetFloat()), 25, 256)
     local MarginY = math.Clamp((ScrH() - 768) * math.max(0.1, spawnmenu_border:GetFloat()), 25, 256)
@@ -185,13 +13,13 @@ concommand.Add("tr_entity_menu", function(ply, cmd, args)
     local changed_lists = {}
     local dirty = false
 
-    ply.EntityMenu = vgui.Create("DFrame")
-    ply.EntityMenu:SetSize(1000, 1000)
-    ply.EntityMenu:SetTitle("Total Replacer")
-    ply.EntityMenu:Center()
-    ply.EntityMenu:MakePopup()
+    ply.VehicleMenu = vgui.Create("DFrame")
+    ply.VehicleMenu:SetSize(1000, 1000)
+    ply.VehicleMenu:SetTitle("Total Replacer")
+    ply.VehicleMenu:Center()
+    ply.VehicleMenu:MakePopup()
 
-    local propscroll = vgui.Create("DScrollPanel", ply.EntityMenu)
+    local propscroll = vgui.Create("DScrollPanel", ply.VehicleMenu)
     propscroll:Dock(FILL)
     propscroll:DockMargin(0, 0, 0, 0)
 
@@ -200,7 +28,7 @@ concommand.Add("tr_entity_menu", function(ply, cmd, args)
 
     local Categorised = {}
 
-    local spawnableEntities = list.Get("SpawnableEntities")
+    local spawnableEntities = list.Get("Vehicles")
 
 
     for k, v in pairs(spawnableEntities) do
@@ -214,22 +42,22 @@ concommand.Add("tr_entity_menu", function(ply, cmd, args)
     end
  
     for CategoryName, v in SortedPairs(Categorised) do
-        if CategoryName == "Half-Life 2" or CategoryName == "Fun + Games" then
+        if CategoryName == "Half-Life 2" or CategoryName == "Other" then
             local Header = vgui.Create("ContentHeader", proppanel)
             Header:SetText(CategoryName)
             proppanel:Add(Header)
         end
         for k, SpawnableEntities in SortedPairsByMemberValue(v, "PrintName") do
-            if CategoryName != "Half-Life 2" and CategoryName != "Fun + Games" then continue end
+            if CategoryName != "Half-Life 2" and CategoryName != "Other" then continue end
             if SpawnableEntities.AdminOnly and not LocalPlayer():IsAdmin() then continue end
             local icon = vgui.Create("ContentIcon", proppanel)
-            icon:SetMaterial(SpawnableEntities.IconOverride or "entities/" .. SpawnableEntities.ClassName .. ".png")
-            icon:SetName(SpawnableEntities.PrintName or "#" .. SpawnableEntities.ClassName)
+            icon:SetMaterial(SpawnableEntities.IconOverride or "entities/" .. SpawnableEntities.Name .. ".png")
+            icon:SetName(SpawnableEntities.PrintName or "#" .. SpawnableEntities.Name)
             icon:SetAdminOnly(SpawnableEntities.AdminOnly or false)
 
             icon.DoClick = function()
-                cur_table_tr_entity = SpawnableEntities.ClassName
-                RunConsoleCommand( "open_tr_menu_edit_entity" )
+                cur_table_tr_vehicle = SpawnableEntities.Name
+                RunConsoleCommand( "open_tr_menu_edit_vehicle" )
             end
         end
     end
@@ -261,15 +89,15 @@ concommand.Add("tr_entity_menu", function(ply, cmd, args)
         confirmButton:SetPos(10, 100)
         confirmButton:SetSize(130, 30)
         confirmButton.DoClick = function()
-            local files, _ = file.Find("total_entity_replacer/presets/" .. name_preset .."/*.txt", "DATA")
+            local files, _ = file.Find("total_vehicle_replacer/presets/" .. name_preset .."/*.txt", "DATA")
 
             -- Пройдитесь по каждому файлу
             for _, filename in ipairs(files) do
                 -- Прочитайте содержимое файла
-                local content = file.Read("total_entity_replacer/presets/".. name_preset .. "/" .. filename, "DATA")
+                local content = file.Read("total_vehicle_replacer/presets/".. name_preset .. "/" .. filename, "DATA")
     
                 -- Если содержимое существует, записывайте его в новую папку
-                file.Write("total_entity_replacer/" .. filename, content)
+                file.Write("total_vehicle_replacer/" .. filename, content)
             end
             frame:Close()
         end
@@ -286,40 +114,40 @@ concommand.Add("tr_entity_menu", function(ply, cmd, args)
 
 
     local function SavePresetTR(name_preset)
-        local files, _ = file.Find("total_entity_replacer/*.txt", "DATA")
+        local files, _ = file.Find("total_vehicle_replacer/*.txt", "DATA")
 
         -- Пройдитесь по каждому файлу
         for _, filename in ipairs(files) do
             -- Прочитайте содержимое файла
-            local content = file.Read("total_entity_replacer/".. filename, "DATA")
+            local content = file.Read("total_vehicle_replacer/".. filename, "DATA")
 
             -- Если содержимое существует, записывайте его в новую папку
             if content then
-                file.Write("total_entity_replacer/presets/".. name_preset .. "/" .. filename, content)
+                file.Write("total_vehicle_replacer/presets/".. name_preset .. "/" .. filename, content)
             end
         end
     end
 
     local function DeletePresetTR(name_preset)
         -- Путь к папке, которую вы хотите удалить
-        local folderPath = "total_entity_replacer/presets/".. name_preset .. "/*"
+        local folderPath = "total_vehicle_replacer/presets/".. name_preset .. "/*"
 
         -- Получите список всех файлов и папок в указанной папке
         local files, folders = file.Find(folderPath, "DATA")
 
         -- Удаление всех файлов и самой папки
         for _, filename in ipairs(files) do
-            file.Delete("total_entity_replacer/presets/".. name_preset .. "/" .. filename)
-            file.Delete("total_entity_replacer/presets/".. name_preset)
+            file.Delete("total_vehicle_replacer/presets/".. name_preset .. "/" .. filename)
+            file.Delete("total_vehicle_replacer/presets/".. name_preset)
         end
     end
 
     local function CreateFoldersTR(name_preset)
-        if not file.Exists("total_entity_replacer", "DATA") then
-            file.CreateDir("total_entity_replacer")
+        if not file.Exists("total_vehicle_replacer", "DATA") then
+            file.CreateDir("total_vehicle_replacer")
         end
-        if not file.Exists("total_entity_replacer/presets/".. name_preset, "DATA") then
-            file.CreateDir("total_entity_replacer/presets/".. name_preset)
+        if not file.Exists("total_vehicle_replacer/presets/".. name_preset, "DATA") then
+            file.CreateDir("total_vehicle_replacer/presets/".. name_preset)
         end
     end
 
@@ -381,7 +209,7 @@ concommand.Add("tr_entity_menu", function(ply, cmd, args)
         
         
         -- Получение списка папок из папки data
-        local _, folders_presets = file.Find("data/total_entity_replacer/presets/*", "GAME")
+        local _, folders_presets = file.Find("data/total_vehicle_replacer/presets/*", "GAME")
 
         -- Добавление каждой папки
         for _, foldername in ipairs(folders_presets) do
@@ -407,7 +235,7 @@ concommand.Add("tr_entity_menu", function(ply, cmd, args)
     end
 
 
-    local presetsButton = vgui.Create("DButton", ply.EntityMenu)
+    local presetsButton = vgui.Create("DButton", ply.VehicleMenu)
     presetsButton:SetSize(300, 100)
     presetsButton:SetPos(350, 900)
     presetsButton:SetText("Presets")
@@ -419,8 +247,8 @@ end)
 
 
 -- Функции для чтения и записи индивидуальных файлов игроков
-local function ReadItemsFileTR_Entity(ply)
-    local content = file.Read("total_entity_replacer/" .. cur_table_tr_entity .. ".txt", "DATA")
+local function ReadItemsFileTR_Vehicle(ply)
+    local content = file.Read("total_vehicle_replacer/" .. cur_table_tr_vehicle .. ".txt", "DATA")
     if content then
         return util.JSONToTable(content) or {}
     else
@@ -429,26 +257,26 @@ local function ReadItemsFileTR_Entity(ply)
     return content
 end
 
-local function WriteItemsFileTR_Entity(ply, items)
-    if not file.Exists("total_entity_replacer", "DATA") or not file.Exists("total_weapon_replacer", "DATA") then
+local function WriteItemsFileTR_Vehicle(ply, items_swep)
+    if not file.Exists("total_entity_replacer", "DATA") or not file.Exists("total_vehicle_replacer", "DATA") then
         -- Чтоб не ругался из-за отсутствия папок и файлов
         file.CreateDir("total_entity_replacer")
-        file.CreateDir("total_weapon_replacer")
+        file.CreateDir("total_vehicle_replacer")
         file.Write("total_entity_replacer/item_healthvial.txt", "[]")
-        file.Write("total_weapon_replacer/weapon_pistol.txt", "[]")
+        file.Write("total_vehicle_replacer/vehicle_pistol.txt", "[]")
     end
-    file.Write("total_entity_replacer/" .. cur_table_tr_entity .. ".txt", util.TableToJSON(items))
+    file.Write("total_vehicle_replacer/" .. cur_table_tr_vehicle .. ".txt", util.TableToJSON(items_swep))
 end
 
-concommand.Add("open_tr_menu_edit_entity", function(ply, cmd, args)
+concommand.Add("open_tr_menu_edit_vehicle", function(ply, cmd, args)
 
 
     if not ply:IsPlayer() then return end
 
-    local items = ReadItemsFileTR_Entity(ply)
+    local items_swep = ReadItemsFileTR_Vehicle(ply)
 
-    if IsValid(ply.EntityEditor) then
-        ply.EntityEditor:Remove()
+    if IsValid(ply.VehicleEditor) then
+        ply.VehicleEditor:Remove()
     end
     
     local spawnmenu_border = GetConVar("spawnmenu_border")
@@ -461,14 +289,14 @@ concommand.Add("open_tr_menu_edit_entity", function(ply, cmd, args)
     local changed_lists = {}
     local dirty = false
 
-    ply.EntityEditor = vgui.Create("DFrame")
-    ply.EntityEditor:SetSize(1000, 900)
-    ply.EntityEditor:SetTitle("Entity replacer")
-    ply.EntityEditor:Center()
-    ply.EntityEditor:MakePopup()
+    ply.VehicleEditor = vgui.Create("DFrame")
+    ply.VehicleEditor:SetSize(1000, 900)
+    ply.VehicleEditor:SetTitle("Vehicle replacer")
+    ply.VehicleEditor:Center()
+    ply.VehicleEditor:MakePopup()
     
     --------- Часть кода для панельки выбора оружия (Начало)
-    local panel = vgui.Create("DPanel", ply.EntityEditor)
+    local panel = vgui.Create("DPanel", ply.VehicleEditor)
     panel:Dock(FILL)    
 
     local tabs = vgui.Create("DPropertySheet", panel)
@@ -476,23 +304,23 @@ concommand.Add("open_tr_menu_edit_entity", function(ply, cmd, args)
 
     local tab1 = vgui.Create("DPanel")
     tab1.Paint = function() end -- Оставить пустой метод рисования, чтобы вкладка была прозрачной
-    tabs:AddSheet(cur_table_tr_entity, tab1)
+    tabs:AddSheet(cur_table_tr_vehicle, tab1)
        
 
     -- Список текущего оружия игрока
-    local entityList = vgui.Create("DListView", tab1)
-    entityList:SetSize(280, 540)
-    entityList:SetPos(10, 10)
-    entityList:AddColumn("Entities")
+    local vehicleList = vgui.Create("DListView", tab1)
+    vehicleList:SetSize(280, 540)
+    vehicleList:SetPos(10, 10)
+    vehicleList:AddColumn("Entities")
         
     
     -- SpawnIcon для выбора оружия
-    local entitySelect = vgui.Create("DPanelSelect", ply.EntityEditor)
-    entitySelect:SetSize(500, 890)
-    entitySelect:SetPos(310, 30)
+    local vehicleSelect = vgui.Create("DPanelSelect", ply.VehicleEditor)
+    vehicleSelect:SetSize(500, 890)
+    vehicleSelect:SetPos(310, 30)
 
-    for _, entity in pairs(items) do -- Показывает имя в списке уже добавленных в замену
-        entityList:AddLine(entity)
+    for _, vehicle in pairs(items_swep) do -- Показывает имя в списке уже добавленных в замену
+        vehicleList:AddLine(vehicle)
     end
 
     -------------------------------------------------------------------------------------------------------------------------
@@ -500,7 +328,7 @@ concommand.Add("open_tr_menu_edit_entity", function(ply, cmd, args)
 
 
 
-    local propscroll = vgui.Create("DScrollPanel", ply.EntityEditor)
+    local propscroll = vgui.Create("DScrollPanel", ply.VehicleEditor)
     propscroll:Dock(FILL)
     propscroll:DockMargin(300, 24, 16, 16)
 
@@ -509,9 +337,9 @@ concommand.Add("open_tr_menu_edit_entity", function(ply, cmd, args)
 
     local Categorised = {}
 
-    local spawnableEntities = list.Get("SpawnableEntities")
+    local spawnmenuVehicles = list.Get("Vehicles")
 
-    for k, v in pairs(spawnableEntities) do
+    for k, v in pairs(spawnmenuVehicles) do
         local categ = v.Category or "Other"
 
         if not isstring(categ) then
@@ -520,26 +348,26 @@ concommand.Add("open_tr_menu_edit_entity", function(ply, cmd, args)
 
         Categorised[categ] = Categorised[categ] or {}
         table.insert(Categorised[categ], v)
+        v.NameKey = k
     end
  
     for CategoryName, v in SortedPairs(Categorised) do
         local Header = vgui.Create("ContentHeader", proppanel)
         Header:SetText(CategoryName)
         proppanel:Add(Header)
-
-        for k, SpawnableEntities in SortedPairsByMemberValue(v, "PrintName") do
-            if SpawnableEntities.AdminOnly and not LocalPlayer():IsAdmin() then continue end
+        for k, SpawnmenuVehicles in SortedPairsByMemberValue(v, "PrintName") do
+            if SpawnmenuVehicles.AdminOnly and not LocalPlayer():IsAdmin() or SpawnmenuVehicles.Spawnable == false then continue end
             local icon = vgui.Create("ContentIcon", proppanel)
-            icon:SetMaterial(SpawnableEntities.IconOverride or "entities/" .. SpawnableEntities.ClassName .. ".png")
-            icon:SetName(SpawnableEntities.PrintName or "#" .. SpawnableEntities.ClassName)
-            icon:SetAdminOnly(SpawnableEntities.AdminOnly or false)
+            icon:SetMaterial(SpawnmenuVehicles.IconOverride or "entities/" .. SpawnmenuVehicles.Name .. ".png")
+            icon:SetName(SpawnmenuVehicles.PrintName or "#" .. SpawnmenuVehicles.Name)
+            icon:SetAdminOnly(SpawnmenuVehicles.AdminOnly or false)
 
             icon.DoClick = function()
                 local chance = 100
-                if not table.HasValue(items, SpawnableEntities.ClassName.. ":"..chance) then
-                    table.insert(items, SpawnableEntities.ClassName.. ":"..chance)
-                    entityList:AddLine(SpawnableEntities.ClassName.. ":"..chance)
-                    WriteItemsFileTR_Entity(ply, items)
+                if not table.HasValue(items_swep, SpawnmenuVehicles.NameKey.. ":"..chance) then
+                    table.insert(items_swep, SpawnmenuVehicles.NameKey.. ":"..chance)
+                    vehicleList:AddLine(SpawnmenuVehicles.NameKey.. ":"..chance)
+                    WriteItemsFileTR_Vehicle(ply, items_swep)
                 end
             end
             icon.DoRightClick = function()
@@ -547,7 +375,7 @@ concommand.Add("open_tr_menu_edit_entity", function(ply, cmd, args)
                 -- Создаем панель (окно) с кнопкой
                 local myPanel = vgui.Create("DFrame")
                 myPanel:SetSize(300, 150)
-                myPanel:SetTitle("Add Entity with chances")
+                myPanel:SetTitle("Add Vehicle with chances")
                 myPanel:SetPos(mouseX, mouseY)
                 myPanel:MakePopup()
 
@@ -562,10 +390,10 @@ concommand.Add("open_tr_menu_edit_entity", function(ply, cmd, args)
 
                 myButton.DoClick = function()
                     local chance = textEntry:GetValue()
-                    if not table.HasValue(items, SpawnableEntities.ClassName.. ":"..chance) then
-                        table.insert(items, SpawnableEntities.ClassName.. ":"..chance)
-                        entityList:AddLine(SpawnableEntities.ClassName.. ":"..chance)
-                        WriteItemsFileTR_Entity(ply, items)
+                    if not table.HasValue(items_swep, SpawnmenuVehicles.Name.. ":"..chance) then
+                        table.insert(items_swep, SpawnmenuVehicles.Name.. ":"..chance)
+                        vehicleList:AddLine(SpawnmenuVehicles.Name.. ":"..chance)
+                        WriteItemsFileTR_Vehicle(ply, items_swep)
                     end
                     myPanel:Close()
                 end
@@ -577,28 +405,28 @@ concommand.Add("open_tr_menu_edit_entity", function(ply, cmd, args)
     -------------------------------------------------------------------------------------------------------------------------
     
     -- Кнопка удаления
-    local removeButton = vgui.Create("DButton", ply.EntityEditor)
+    local removeButton = vgui.Create("DButton", ply.VehicleEditor)
     removeButton:SetSize(280, 25)
     removeButton:SetPos(10, 675)
-    removeButton:SetText("Delete selected entity")
+    removeButton:SetText("Delete selected vehicle")
     removeButton.DoClick = function()
-        local selectedLine = entityList:GetSelectedLine()
+        local selectedLine = vehicleList:GetSelectedLine()
         if selectedLine then
-            table.remove(items, selectedLine)
-            WriteItemsFileTR_Entity(ply, items)   
-            entityList:RemoveLine(selectedLine)    
+            table.remove(items_swep, selectedLine)
+            WriteItemsFileTR_Vehicle(ply, items_swep)   
+            vehicleList:RemoveLine(selectedLine)    
         end
     end
 
     -- Кнопка удаления Всех Записей
-    local removeButtonAll = vgui.Create("DButton", ply.EntityEditor)
+    local removeButtonAll = vgui.Create("DButton", ply.VehicleEditor)
     removeButtonAll:SetSize(100, 25)
     removeButtonAll:SetPos(10, 800)
     removeButtonAll:SetText("Delete ALL!")
     removeButtonAll.DoClick = function()
-        local selectedLine = entityList:GetSelectedLine()
-        table.Empty(items)
-        entityList:Clear()
-        WriteItemsFileTR_Entity(ply, items)
+        local selectedLine = vehicleList:GetSelectedLine()
+        table.Empty(items_swep)
+        vehicleList:Clear()
+        WriteItemsFileTR_Vehicle(ply, items_swep)
     end
 end)

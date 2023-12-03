@@ -422,7 +422,7 @@ concommand.Add("open_tr_menu_edit_npc", function(ply, cmd, args)
                 end
 
                 SetSettings.DoClick = function()
-                    local chance = textEntry:GetValue()
+                    local chance = chance_NPC:GetValue()
                     local weapon_NPC = dropDownList:GetValue()
                     if not table.HasValue(items, AllNPC.NameKey.. ":"..chance) then
                         table.insert(items, AllNPC.NameKey.. ":"..chance..":"..weapon_NPC)

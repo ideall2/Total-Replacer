@@ -309,11 +309,14 @@ local allNPCWeapons = list.Get("NPCUsableWeapons") -- Получает весь 
 local allNPCWeapons_Random = {} -- Списко для Всех случайных оружий
 local allNPC = list.Get("NPC") -- Получает весь список энтити из спавнменю которое есть в игре (И даже недоступные для спавна)
 
+if SERVER then
+    hook.Add("Initialize", "ShowNPCList", function()
+        allNPC = list.Get("NPC")
+    end)
+end
+
 for key, value in pairs(allNPC) do
     local Class_npc = value["Class"]
-    -- if key then
-    --     print(key.." name")
-    -- end
 end
 
 for k, v in pairs(allNPCWeapons) do
@@ -721,6 +724,7 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
                         if chance <= chance_npc then
                             local name_NW2_NPC = ent:GetNW2String("Spawnmenu_name")
                             if Class_NPC != "" and ent:GetNW2Bool("IsReplaced") != true and table.HasValue(npcList, ent:GetNW2String("Spawnmenu_name")) and GetConVar("tr_"..name_NW2_NPC):GetBool() == true then
+                                print(Class_NPC)
                                 local newNPC = ents.Create(Class_NPC) -- or random_npc) ---- Стандартная замена, если не было отфильтрованно
                                 local owner = NPCOwners_TR[ent]
                                 newNPC:SetPos(ent:GetPos() + Vector(0, 0, 25))
@@ -925,7 +929,7 @@ hook.Add("OnEntityCreated", "ReplacingVEHICLE", function(ent)
                         local vehicle_pattern = "([^:]+):([^:]+)"
                         local vehicle_name, chance_vehicle_str = nil, nil
                         if ContentVEHICLE_Choosed != nil then
-                            vehicle_name, chance_vehicle_str, weapon_vehicle = string.match(ContentVEHICLE_Choosed, vehicle_pattern)
+                            vehicle_name, chance_vehicle_str = string.match(ContentVEHICLE_Choosed, vehicle_pattern)
                         end
                         for key, value in pairs(allVEHICLE) do
                             if key == vehicle_name then
@@ -937,9 +941,6 @@ hook.Add("OnEntityCreated", "ReplacingVEHICLE", function(ent)
                                 end
                                 if value.Weapons and weapon_vehicle == "standart" then
                                     Weapons_VEHICLE = value.Weapons[math.random(#value.Weapons)]
-                                end
-                                if weapon_vehicle != "standart" and weapon_vehicle != "" then
-                                    Weapons_VEHICLE = weapon_vehicle
                                 end
                                     if value.KeyValues then
                                         for key, value in pairs(value.KeyValues) do
