@@ -52,7 +52,8 @@ local weaponList = { -- Список с энтити для генерации �
 }
 local vehicleList = {
     "Jeep",
-    "Airboat"
+    "Airboat",
+    "Pod"
 }
 local npcList = { -- Список НПС для генерации консольных команд
     "npc_crow",
@@ -198,10 +199,10 @@ end
 EntityOwners_TR = EntityOwners_TR or {}
 NPCOwners_TR = NPCOwners_TR or {}
 VEHICLEOwners_TR = VEHICLEOwners_TR or {} 
-    -- Глобальная переменная. Очень долго не мог додуматься, как доебаться до создателя.
-    -- Все это нужно для получения игрока создателя и присваиванию новому энтити и удаление gmod_undo.
- -- ДА СУКА. Я доебался до него!
- -- Благодаря глобальной переменной я смог вызвать таблицу в нужном месте
+-- Глобальная переменная. Очень долго не мог додуматься, как доебаться до создателя.
+-- Все это нужно для получения игрока создателя и присваиванию новому энтити и удаление gmod_undo.
+-- ДА СУКА. Я доебался до него!
+-- Благодаря глобальной переменной я смог вызвать таблицу в нужном месте
 hook.Add("PlayerSpawnedSENT", "SavingOwnerEntity", function(ply,ent) -- Тот самый хук который берет создателя при спавне энтити из спавнменю
     EntityOwners_TR[ent] = ply
 end)
@@ -220,12 +221,20 @@ hook.Add("PlayerSpawnNPC", "GetInfoNPC", function(ply,npc_type,weapon)
 end)
 
 local allWeapons = list.Get("Weapon") -- Получает весь список энтити из спавнменю которое есть в игре (И даже недоступные для спавна)
-local allRandomWeapons = {} -- Списко для Всех случайных оружий
-for k, v in pairs(allWeapons) do
-    if v.Spawnable then
-        table.insert(allRandomWeapons, k)
-    end
+local allRandomWeapons = {} -- Списко для Всех случайных оружий(отфильрованный)
+
+if SERVER then -- Пусть сначала инициализируются оружия, так как код на добавление списка оружия запускается первее чем будут активны энтити
+    hook.Add("Initialize", "ShowWeaponList", function()
+        allWeapons = list.Get("Weapon")
+        for k, v in pairs(allWeapons) do
+            if v.Spawnable then
+                table.insert(allRandomWeapons, k)
+            end
+        end
+    end)
+    PrintTable(allRandomWeapons)
 end
+
 hook.Add( "WeaponEquip", "WeaponReplaced", function( weapon, ply )
     if GetConVar("tr_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена
     if GetConVar("tr_weapon_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена
@@ -309,20 +318,37 @@ local allNPCWeapons = list.Get("NPCUsableWeapons") -- Получает весь 
 local allNPCWeapons_Random = {} -- Списко для Всех случайных оружий
 local allNPC = list.Get("NPC") -- Получает весь список энтити из спавнменю которое есть в игре (И даже недоступные для спавна)
 
-if SERVER then
+local allSpawnableEntities = list.Get("SpawnableEntities") -- Получает весь список энтити из спавнменю которое есть в игре (И даже недоступные для спавна)
+local allRandomEntities = {} -- Списко для Всех случайных оружий
+local allVEHICLE = list.Get("Vehicles") -- Получает весь список энтити из спавнменю которое есть в игре (И даже недоступные для спавна)
+
+timer.Simple(0.6, function() -- Требуется время на загрузку всех или большинства энтити
+    allNPC = list.Get("NPC")
+    allNPCWeapons = list.Get("NPCUsableWeapons")
+    allSpawnableEntities = list.Get("SpawnableEntities")
+    allVEHICLE = list.Get("Vehicles")
+end)
+
+if SERVER then -- Пусть сначала инициализируются оружия, так как код на добавление списка оружия запускается первее чем будут активны энтити
     hook.Add("Initialize", "ShowNPCList", function()
         allNPC = list.Get("NPC")
+        allNPCWeapons = list.Get("NPCUsableWeapons")
+        allSpawnableEntities = list.Get("SpawnableEntities")
+        for k, v in pairs(allSpawnableEntities) do
+            table.insert(allRandomEntities, k)
+        end
+        allVEHICLE = list.Get("Vehicles") -- Получает весь список энтити из спавнменю которое есть в игре (И даже недоступные для спавна)
+        for key, value in pairs(allNPC) do
+            local Class_npc = value["Class"]
+        end
+        
+        for k, v in pairs(allNPCWeapons) do
+            local weaponClass = v.class
+            table.insert(allNPCWeapons_Random, weaponClass)
+        end
     end)
 end
 
-for key, value in pairs(allNPC) do
-    local Class_npc = value["Class"]
-end
-
-for k, v in pairs(allNPCWeapons) do
-    local weaponClass = v.class
-    table.insert(allNPCWeapons_Random, weaponClass)
-end
 
 hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
     if GetConVar("tr_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена       
@@ -779,11 +805,6 @@ hook.Add("OnEntityCreated", "ReplacingEntity", function(ent) -- При созд�
     if GetConVar("tr_entity_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена
     if not table.HasValue(entityList, ent:GetClass()) then return end -- Нужно чтобы код не выполнялся если нет нужного энтити
             ------------------------ Общее
-    local allSpawnableEntities = list.Get("SpawnableEntities") -- Получает весь список энтити из спавнменю которое есть в игре (И даже недоступные для спавна)
-    local allRandomEntities = {} -- Списко для Всех случайных оружий
-    for k, v in pairs(allSpawnableEntities) do
-        table.insert(allRandomEntities, k)
-    end
         -- Функция нужна для определия, есть ли из списка entityList то, что заспавнилось
         local function CheckedEntity_TR(searched_entity) 
             local nameEnts = ent:GetClass()
@@ -877,8 +898,6 @@ hook.Add("OnEntityCreated", "ReplacingEntity", function(ent) -- При созд�
             ReplacingEntity_TR(ent)
         end
 end)
-
-local allVEHICLE = list.Get("Vehicles") -- Получает весь список энтити из спавнменю которое есть в игре (И даже недоступные для спавна)
 
 hook.Add("OnEntityCreated", "ReplacingVEHICLE", function(ent)
     if GetConVar("tr_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена       

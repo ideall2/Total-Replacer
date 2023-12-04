@@ -2,11 +2,14 @@ local cur_table_tr_npc = ""
 local items = {}
 local weapons_NPC = {}
 local AllNPC_Weapons = list.Get("NPCUsableWeapons")
-
-for k, v in pairs(AllNPC_Weapons) do
-    local weaponClass = v.class
-    table.insert(weapons_NPC, weaponClass)
-end
+timer.Simple(0.6, function()
+    AllNPC_Weapons = list.Get("NPCUsableWeapons")
+    for k, v in pairs(AllNPC_Weapons) do
+        local weaponClass = v.class
+        -- print(v.class)
+        table.insert(weapons_NPC, weaponClass)
+    end
+end)
 
 concommand.Add("tr_npc_menu", function(ply, cmd, args)
     local spawnmenu_border = GetConVar("spawnmenu_border")

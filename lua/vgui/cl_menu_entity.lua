@@ -40,6 +40,11 @@ local weaponList = { -- Список с энтити для генерации �
     "weapon_stunstick",
     -- Добавьте другие строки
 }
+local vehicleList = {
+    "Jeep",
+    "Airboat",
+    "Pod"
+}
 local npcList = { -- Список НПС для генерации консольных команд
     "npc_crow",
     "npc_pigeon",
@@ -141,35 +146,70 @@ concommand.Add("tr_menu", function(ply, cmd, args)
     CreateMenu()
 end)
 
-local function TR_SettingsPanel(Panel)
+local function TR_SettingsPanel_base(Panel)
     local openMenuButton = Panel:Button("Open TR")
     openMenuButton.DoClick = function()
         RunConsoleCommand("tr_entity_menu")
     end
+    Panel:Help("These columns are responsible for generally turning the TR on or off.")
     Panel:AddControl("CheckBox", {Label = "Enable Total Replacer", Command = "tr_enable"})
     Panel:AddControl("CheckBox", {Label = "Enable Total Replacer for Entities", Command = "tr_entity_enable"})
     Panel:AddControl("CheckBox", {Label = "Enable Total Replacer for NPCs", Command = "tr_npc_enable"})
     Panel:AddControl("CheckBox", {Label = "Enable Total Replacer for Weapons", Command = "tr_weapon_enable"})
-    Panel:Help("Entities Replacing")
-    for key, value in pairs(entityList) do
-        Panel:AddControl("CheckBox", {Label = "Enable TR for Entities: "..value, Command = "tr_"..value})
-    end
-    Panel:Help("NPCs Replacing")
-    for key, value in pairs(npcList) do
-        Panel:AddControl("CheckBox", {Label = "Enable TR for NPCs: "..value, Command = "tr_"..value})
-    end
+    Panel:AddControl("CheckBox", {Label = "Enable Total Replacer for Vehicles", Command = "tr_vehicle_enable"})
+    Panel:Help( "These modes enable a randomizer for unfilled entities or weapons. Unfortunately, I couldn't make randomizer for transportation and NPCs, because of the problem with names. In general, if you need randomization, then turn it on, if not, then unfilled intiti or weapons will NOT be replaced if they are not filled.")
+    Panel:AddControl("CheckBox", {Label = "Enable Randomizer for empty lists in Weapons", Command = "tr_enable_randomize_weapons"})
+    Panel:AddControl("CheckBox", {Label = "Enable Randomizer for empty lists in Entities", Command = "tr_enable_randomize_entities"})
+    Panel:Help("Authors: IDEALL")
+end
+
+local function TR_SettingsPanel_weapons(Panel)
     Panel:Help("Weapons Replacing")
     for key, value in pairs(weaponList) do
-        Panel:AddControl("CheckBox", {Label = "Enable TR for Weapons: "..value, Command = "tr_"..value})
+        Panel:AddControl("CheckBox", {Label = "Enable TR for Weapon: "..value, Command = "tr_"..value})
+    end
+    Panel:Help("Authors: IDEALL")
+end
+local function TR_SettingsPanel_npc(Panel)
+    Panel:Help("NPCs Replacing")
+    for key, value in pairs(npcList) do
+        Panel:AddControl("CheckBox", {Label = "Enable TR for NPC: "..value, Command = "tr_"..value})
+    end
+    Panel:Help("Authors: IDEALL")
+end
+local function TR_SettingsPanel_entity(Panel)
+    Panel:Help("Entities Replacing")
+    for key, value in pairs(entityList) do
+        Panel:AddControl("CheckBox", {Label = "Enable TR for Entity: "..value, Command = "tr_"..value})
+    end
+    Panel:Help("Authors: IDEALL")
+end
+local function TR_SettingsPanel_vehicle(Panel)
+    Panel:Help("Entities Replacing")
+    for key, value in pairs(vehicleList) do
+        Panel:AddControl("CheckBox", {Label = "Enable TR for Vehicle: "..value, Command = "tr_"..value})
     end
     Panel:Help("Authors: IDEALL")
 end
 
-local function TR_SettingsPaneladd()
-	spawnmenu.AddToolMenuOption("Options", "Total Replacer", "TR", "TR menu", "", "", TR_SettingsPanel)
+
+local function TR_SettingsPaneladd_base()
+	spawnmenu.AddToolMenuOption("Options", "Total Replacer", "TR_base", "TR Base", "", "", TR_SettingsPanel_base)
+    spawnmenu.AddToolMenuOption("Options", "Total Replacer", "TR_npcs", "TR NPCs", "", "", TR_SettingsPanel_npc)
+    spawnmenu.AddToolMenuOption("Options", "Total Replacer", "TR_vehicles", "TR Vehicles", "", "", TR_SettingsPanel_vehicle)
+    spawnmenu.AddToolMenuOption("Options", "Total Replacer", "TR_entities", "TR Entities", "", "", TR_SettingsPanel_entity)
+    spawnmenu.AddToolMenuOption("Options", "Total Replacer", "TR_weapons", "TR Weapons", "", "", TR_SettingsPanel_weapons)
 end
 
-hook.Add("PopulateToolMenu", "TR_SettingsPanel", TR_SettingsPaneladd)
+-- local function TR_SettingsPaneladd_weapons()
+-- end
+
+-- local function TR_SettingsPaneladd_weapons()
+-- end
+
+hook.Add("PopulateToolMenu", "TR_SettingsPanel_base", TR_SettingsPaneladd_base)
+-- hook.Add("PopulateToolMenu", "TR_SettingsPanel_weapons", TR_SettingsPaneladd_weapons)
+-- hook.Add("PopulateToolMenu", "TR_SettingsPanel_npc", TR_SettingsPaneladd_npc)
 
 local cur_table_tr_entity = ""
 local items = {}
