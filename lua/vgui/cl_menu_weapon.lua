@@ -49,7 +49,8 @@ concommand.Add("tr_weapon_menu", function(ply, cmd, args)
         end
         for k, SpawnableEntities in SortedPairsByMemberValue(v, "PrintName") do
             if CategoryName != "Half-Life 2" and CategoryName != "Other" then continue end
-            if SpawnableEntities.AdminOnly and not LocalPlayer():IsAdmin() then continue end
+            if SpawnableEntities.Spawnable == false then continue end
+            if not LocalPlayer():IsAdmin() then continue end
             local icon = vgui.Create("ContentIcon", proppanel)
             icon:SetMaterial(SpawnableEntities.IconOverride or "entities/" .. SpawnableEntities.ClassName .. ".png")
             icon:SetName(SpawnableEntities.PrintName or "#" .. SpawnableEntities.ClassName)
@@ -355,7 +356,8 @@ concommand.Add("open_tr_menu_edit_weapon", function(ply, cmd, args)
         Header:SetText(CategoryName)
         proppanel:Add(Header)
         for k, SpawnmenuWeapons in SortedPairsByMemberValue(v, "PrintName") do
-            if SpawnmenuWeapons.AdminOnly and not LocalPlayer():IsAdmin() or SpawnmenuWeapons.Spawnable == false then continue end
+            if not LocalPlayer():IsAdmin() then continue end
+            if SpawnmenuWeapons.Spawnable == false then continue end
             local icon = vgui.Create("ContentIcon", proppanel)
             icon:SetMaterial(SpawnmenuWeapons.IconOverride or "entities/" .. SpawnmenuWeapons.ClassName .. ".png")
             icon:SetName(SpawnmenuWeapons.PrintName or "#" .. SpawnmenuWeapons.ClassName)
@@ -377,6 +379,12 @@ concommand.Add("open_tr_menu_edit_weapon", function(ply, cmd, args)
                 myPanel:SetTitle("Add Weapon with chances")
                 myPanel:SetPos(mouseX, mouseY)
                 myPanel:MakePopup()
+
+                local text_chance_NPC = vgui.Create("DLabel", myPanel)
+                text_chance_NPC:SetPos(10, 25)
+                text_chance_NPC:SetSize(200, 20)
+                text_chance_NPC:SetText("Set Chance of Spawn Weapon")
+                text_chance_NPC:SetColor(Color(255, 255, 255))
 
                 local myButton = vgui.Create("DButton", myPanel)
                 myButton:SetSize(100, 30)

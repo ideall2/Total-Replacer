@@ -232,7 +232,6 @@ if SERVER then -- Пусть сначала инициализируются о�
             end
         end
     end)
-    PrintTable(allRandomWeapons)
 end
 
 hook.Add( "WeaponEquip", "WeaponReplaced", function( weapon, ply )
@@ -542,7 +541,7 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
                         end
                         if ent:GetClass() == "npc_gman" then
                             local Model_name_NPC = ent:GetModel()
-                            print(Model_name_NPC)
+                            -- print(Model_name_NPC)
                             if Model_name_NPC == "models/gman.mdl" then
                                 ent:SetNW2String("Spawnmenu_name", "npc_gman")
                             end
@@ -750,7 +749,7 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
                         if chance <= chance_npc then
                             local name_NW2_NPC = ent:GetNW2String("Spawnmenu_name")
                             if Class_NPC != "" and ent:GetNW2Bool("IsReplaced") != true and table.HasValue(npcList, ent:GetNW2String("Spawnmenu_name")) and GetConVar("tr_"..name_NW2_NPC):GetBool() == true then
-                                print(Class_NPC)
+                                -- print(Class_NPC)
                                 local newNPC = ents.Create(Class_NPC) -- or random_npc) ---- Стандартная замена, если не было отфильтрованно
                                 local owner = NPCOwners_TR[ent]
                                 newNPC:SetPos(ent:GetPos() + Vector(0, 0, 25))

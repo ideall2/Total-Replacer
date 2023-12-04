@@ -1,13 +1,23 @@
 local cur_table_tr_npc = ""
 local items = {}
 local weapons_NPC = {}
+local weapons_player = {}
 local AllNPC_Weapons = list.Get("NPCUsableWeapons")
+local All_Weapons = list.Get("Weapon")
 timer.Simple(0.6, function()
     AllNPC_Weapons = list.Get("NPCUsableWeapons")
+    All_Weapons = list.Get("Weapon")
     for k, v in pairs(AllNPC_Weapons) do
         local weaponClass = v.class
         -- print(v.class)
         table.insert(weapons_NPC, weaponClass)
+    end
+    for k, v in pairs(All_Weapons) do
+        -- local weaponClass = v.class
+        -- PrintTable(v)
+        if v.Spawnable == true then
+            table.insert(weapons_player, v.ClassName)
+        end
     end
 end)
 
@@ -383,54 +393,93 @@ concommand.Add("open_tr_menu_edit_npc", function(ply, cmd, args)
                 end
             end
             icon.DoRightClick = function()
-                local mouseX, mouseY = input.GetCursorPos()
                 -- Создаем панель (окно) с кнопкой
                 local Additional_Settings = vgui.Create("DFrame")
-                Additional_Settings:SetSize(300, 250)
+                Additional_Settings:SetSize(500, 350)
                 Additional_Settings:SetTitle("Add NPC with chances and weapons")
-                Additional_Settings:SetPos(mouseX, mouseY)
+                Additional_Settings:Center()
                 Additional_Settings:MakePopup()
 
                 local SetSettings = vgui.Create("DButton", Additional_Settings)
                 SetSettings:SetSize(100, 30)
-                SetSettings:SetPos(100, 220)
+                SetSettings:SetPos(100, 320)
                 SetSettings:SetText("Set Chance")
 
                 local chance_NPC = vgui.Create("DTextEntry", Additional_Settings)
                 chance_NPC:SetSize(280, 30)
                 chance_NPC:SetPos(10, 80)
                 chance_NPC:SetText("100")
-
-                local dropDownList = vgui.Create("DComboBox", Additional_Settings)
-                dropDownList:SetPos(10, 150)
-                dropDownList:SetSize(280, 25)
-                dropDownList:AddChoice("standart", index)
-                dropDownList:AddChoice("none", index)
-                dropDownList:SetText("standart")
-
                 local text_chance_NPC = vgui.Create("DLabel", Additional_Settings)
                 text_chance_NPC:SetPos(50, 60)
                 text_chance_NPC:SetSize(200, 20)
-                text_chance_NPC:SetText("Set Chance of Spawn NPC")
+                text_chance_NPC:SetText("Set Chance for NPCs")
                 text_chance_NPC:SetColor(Color(255, 255, 255))
 
+                local weapon_list_npc = vgui.Create("DComboBox", Additional_Settings)
+                weapon_list_npc:SetPos(10, 150)
+                weapon_list_npc:SetSize(200, 25)
+                weapon_list_npc:AddChoice("standart", index)
+                weapon_list_npc:AddChoice("none", index)
+                weapon_list_npc:SetText("standart")
                 local text_weapon_NPC = vgui.Create("DLabel", Additional_Settings)
                 text_weapon_NPC:SetPos(50, 125)
                 text_weapon_NPC:SetSize(200, 20)
-                text_weapon_NPC:SetText("Set Weapon of Spawn NPC")
+                text_weapon_NPC:SetText("Set Weapon from NPCs SWEP")
                 text_weapon_NPC:SetColor(Color(255, 255, 255))
 
+                local weapon_list_player = vgui.Create("DComboBox", Additional_Settings)
+                weapon_list_player:SetPos(250, 150)
+                weapon_list_player:SetSize(200, 25)
+                weapon_list_player:AddChoice("standart", index)
+                weapon_list_player:AddChoice("none", index)
+                weapon_list_player:SetText("standart")
+                local text_weapon_player = vgui.Create("DLabel", Additional_Settings)
+                text_weapon_player:SetPos(250, 125)
+                text_weapon_player:SetSize(200, 20)
+                text_weapon_player:SetText("Set Weapon from players SWEP")
+                text_weapon_player:SetColor(Color(255, 255, 255))
+
+                local manual_add_weapon = vgui.Create("DTextEntry", Additional_Settings)
+                manual_add_weapon:SetPos(100, 250)
+                manual_add_weapon:SetSize(200, 25)
+                local text_weapon_NPC_manual = vgui.Create("DLabel", Additional_Settings)
+                text_weapon_NPC_manual:SetPos(100, 225)
+                text_weapon_NPC_manual:SetSize(200, 20)
+                text_weapon_NPC_manual:SetText("or you can manually set NPCs weapon")
+                text_weapon_NPC_manual:SetColor(Color(255, 255, 255))
+
                 for index, value in ipairs(weapons_NPC) do
-                    dropDownList:AddChoice(value, index) -- Добавляем значение в падающий список с указанием индекса
+                    weapon_list_npc:AddChoice(value, index) -- Добавляем значение в падающий список с указанием индекса
+                end
+
+                for index, value in ipairs(weapons_player) do
+                    weapon_list_player:AddChoice(value, index) -- Добавляем значение в падающий список с указанием индекса
                 end
 
                 SetSettings.DoClick = function()
                     local chance = chance_NPC:GetValue()
-                    local weapon_NPC = dropDownList:GetValue()
+                    local weapon_NPC = weapon_list_npc:GetValue()
+                    local weapon_NPC_manual = manual_add_weapon:GetValue()
+                    local weapon_player = weapon_list_player:GetValue()
                     if not table.HasValue(items, AllNPC.NameKey.. ":"..chance) then
-                        table.insert(items, AllNPC.NameKey.. ":"..chance..":"..weapon_NPC)
-                        npcList:AddLine(AllNPC.NameKey.. ":"..chance..":"..weapon_NPC)
-                        WriteItemsFileTR_NPC(ply, items)
+                        if weapon_NPC_manual != "" then
+                            table.insert(items, AllNPC.NameKey.. ":"..chance..":"..weapon_NPC_manual)
+                            npcList:AddLine(AllNPC.NameKey.. ":"..chance..":"..weapon_NPC_manual)
+                            WriteItemsFileTR_NPC(ply, items)
+                        elseif weapon_player != "standart" and weapon_NPC == "standart" then
+                            table.insert(items, AllNPC.NameKey.. ":"..chance..":"..weapon_player)
+                            npcList:AddLine(AllNPC.NameKey.. ":"..chance..":"..weapon_player)
+                            WriteItemsFileTR_NPC(ply, items)
+                        elseif weapon_player == "standart" and weapon_NPC != "standart" then
+                            table.insert(items, AllNPC.NameKey.. ":"..chance..":"..weapon_NPC)
+                            npcList:AddLine(AllNPC.NameKey.. ":"..chance..":"..weapon_NPC)
+                            WriteItemsFileTR_NPC(ply, items)
+                        else
+                            table.insert(items, AllNPC.NameKey.. ":"..chance..":"..weapon_NPC)
+                            npcList:AddLine(AllNPC.NameKey.. ":"..chance..":"..weapon_NPC)
+                            WriteItemsFileTR_NPC(ply, items)
+                        end
+
                     end
                     Additional_Settings:Close()
                 end

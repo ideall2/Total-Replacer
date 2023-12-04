@@ -293,7 +293,7 @@ concommand.Add("tr_entity_menu", function(ply, cmd, args)
         local label = vgui.Create("DLabel", frame)
         label:SetPos(10, 30) 
         label:SetSize(280, 60)
-        label:SetText("Warning. Your unsaved preset will be replaced and lost forever.")
+        label:SetText("Warning. Your unsaved preset will be replaced and lost.")
 
         -- Создаем кнопку подтверждения
         local confirmButton = vgui.Create("DButton", frame)
@@ -303,12 +303,8 @@ concommand.Add("tr_entity_menu", function(ply, cmd, args)
         confirmButton.DoClick = function()
             local files, _ = file.Find("total_entity_replacer/presets/" .. name_preset .."/*.txt", "DATA")
 
-            -- Пройдитесь по каждому файлу
             for _, filename in ipairs(files) do
-                -- Прочитайте содержимое файла
                 local content = file.Read("total_entity_replacer/presets/".. name_preset .. "/" .. filename, "DATA")
-    
-                -- Если содержимое существует, записывайте его в новую папку
                 file.Write("total_entity_replacer/" .. filename, content)
             end
             frame:Close()
@@ -590,6 +586,12 @@ concommand.Add("open_tr_menu_edit_entity", function(ply, cmd, args)
                 myPanel:SetTitle("Add Entity with chances")
                 myPanel:SetPos(mouseX, mouseY)
                 myPanel:MakePopup()
+
+                local text_chance_NPC = vgui.Create("DLabel", myPanel)
+                text_chance_NPC:SetPos(10, 25)
+                text_chance_NPC:SetSize(200, 20)
+                text_chance_NPC:SetText("Set Chance of Spawn Entity")
+                text_chance_NPC:SetColor(Color(255, 255, 255))
 
                 local myButton = vgui.Create("DButton", myPanel)
                 myButton:SetSize(100, 30)
