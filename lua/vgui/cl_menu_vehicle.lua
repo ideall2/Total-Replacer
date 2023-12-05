@@ -1,6 +1,14 @@
 
 local cur_table_tr_vehicle = ""
 local items_swep = {}
+local simfphys_vehicles_in_tr = {}
+local simfphys_vehicles = list.Get("simfphys_vehicles")
+
+for key, value in pairs(simfphys_vehicles) do
+    -- print(getTableName(simfphys_vehicles))    
+    -- print(key)
+    table.insert(simfphys_vehicles_in_tr, key)
+end
 
 concommand.Add("tr_vehicle_menu", function(ply, cmd, args)
     local spawnmenu_border = GetConVar("spawnmenu_border")
@@ -338,70 +346,74 @@ concommand.Add("open_tr_menu_edit_vehicle", function(ply, cmd, args)
     local Categorised = {}
 
     local spawnmenuVehicles = list.Get("Vehicles")
+    -- local spawnmenuVehicles_ready = {}
+    -- local spawnmenuVehicles_ready = mergeTables(spawnmenuVehicles, simfphys_vehicles)
+    -- PrintTable(spawnmenuVehicles_ready)
 
-    for k, v in pairs(spawnmenuVehicles) do
-        local categ = v.Category or "Other"
-
-        if not isstring(categ) then
-            categ = tostring(categ)
-        end
-
-        Categorised[categ] = Categorised[categ] or {}
-        table.insert(Categorised[categ], v)
-        v.NameKey = k
-    end
- 
-    for CategoryName, v in SortedPairs(Categorised) do
-        local Header = vgui.Create("ContentHeader", proppanel)
-        Header:SetText(CategoryName)
-        proppanel:Add(Header)
-        for k, SpawnmenuVehicles in SortedPairsByMemberValue(v, "PrintName") do
-            if SpawnmenuVehicles.AdminOnly and not LocalPlayer():IsAdmin() or SpawnmenuVehicles.Spawnable == false then continue end
-            local icon = vgui.Create("ContentIcon", proppanel)
-            icon:SetMaterial(SpawnmenuVehicles.IconOverride or "entities/" .. SpawnmenuVehicles.Name .. ".png")
-            icon:SetName(SpawnmenuVehicles.PrintName or "#" .. SpawnmenuVehicles.Name)
-            icon:SetAdminOnly(SpawnmenuVehicles.AdminOnly or false)
-
-            icon.DoClick = function()
-                local chance = 100
-                if not table.HasValue(items_swep, SpawnmenuVehicles.NameKey.. ":"..chance) then
-                    table.insert(items_swep, SpawnmenuVehicles.NameKey.. ":"..chance)
-                    vehicleList:AddLine(SpawnmenuVehicles.NameKey.. ":"..chance)
-                    WriteItemsFileTR_Vehicle(ply, items_swep)
-                end
+    local function categirisng(nametable)    
+        for k, v in pairs(nametable) do
+            local categ = v.Category or "Other"
+            if not isstring(categ) then
+                categ = tostring(categ)
             end
-            icon.DoRightClick = function()
-                local mouseX, mouseY = input.GetCursorPos()
-                -- Создаем панель (окно) с кнопкой
-                local myPanel = vgui.Create("DFrame")
-                myPanel:SetSize(300, 150)
-                myPanel:SetTitle("Add Vehicle with chances")
-                myPanel:SetPos(mouseX, mouseY)
-                myPanel:MakePopup()
+            Categorised[categ] = Categorised[categ] or {}
+            table.insert(Categorised[categ], v)
+            v.NameKey = k
+        end
+    end
+    categirisng(spawnmenuVehicles)
+    -- PrintTable(spawnmenuVehicles_ready)
+    local function test_insert(name_table)
+        for CategoryName, v in SortedPairs(Categorised) do
+            local Header = vgui.Create("ContentHeader", proppanel)
+            Header:SetText(CategoryName)
+            proppanel:Add(Header)
+            for k, name_table in SortedPairsByMemberValue(v, "PrintName") do
+                if name_table.AdminOnly and not LocalPlayer():IsAdmin() or name_table.Spawnable == false then continue end
+                local icon = vgui.Create("ContentIcon", proppanel)
+                icon:SetMaterial(name_table.IconOverride or "entities/" .. name_table.Name .. ".png")
+                icon:SetName(name_table.PrintName or "#" .. name_table.Name)
+                icon:SetAdminOnly(name_table.AdminOnly or false)
 
-                local myButton = vgui.Create("DButton", myPanel)
-                myButton:SetSize(100, 30)
-                myButton:SetPos(100, 120)
-                myButton:SetText("Set Chance")
-
-                local textEntry = vgui.Create("DTextEntry", myPanel)
-                textEntry:SetSize(280, 30)
-                textEntry:SetPos(10, 40)
-
-                myButton.DoClick = function()
-                    local chance = textEntry:GetValue()
-                    if not table.HasValue(items_swep, SpawnmenuVehicles.Name.. ":"..chance) then
-                        table.insert(items_swep, SpawnmenuVehicles.Name.. ":"..chance)
-                        vehicleList:AddLine(SpawnmenuVehicles.Name.. ":"..chance)
+                icon.DoClick = function()
+                    local chance = 100
+                    if not table.HasValue(items_swep, name_table.NameKey.. ":"..chance) then
+                        table.insert(items_swep, name_table.NameKey.. ":"..chance)
+                        vehicleList:AddLine(name_table.NameKey.. ":"..chance)
                         WriteItemsFileTR_Vehicle(ply, items_swep)
                     end
-                    myPanel:Close()
+                end
+                icon.DoRightClick = function()
+                    -- Создаем панель (окно) с кнопкой
+                    local myPanel = vgui.Create("DFrame")
+                    myPanel:SetSize(300, 150)
+                    myPanel:SetTitle("Add Vehicle with chances")
+                    myPanel:Center()
+                    myPanel:MakePopup()
+
+                    local myButton = vgui.Create("DButton", myPanel)
+                    myButton:SetSize(100, 30)
+                    myButton:SetPos(100, 120)
+                    myButton:SetText("Set Chance")
+
+                    local textEntry = vgui.Create("DTextEntry", myPanel)
+                    textEntry:SetSize(280, 30)
+                    textEntry:SetPos(10, 40)
+
+                    myButton.DoClick = function()
+                        local chance = textEntry:GetValue()
+                        if not table.HasValue(items_swep, name_table.Name.. ":"..chance) then
+                            table.insert(items_swep, name_table.Name.. ":"..chance)
+                            vehicleList:AddLine(name_table.Name.. ":"..chance)
+                            WriteItemsFileTR_Vehicle(ply, items_swep)
+                        end
+                        myPanel:Close()
+                    end
                 end
             end
-
-
         end
     end
+    test_insert(spawnmenuVehicles)
     -------------------------------------------------------------------------------------------------------------------------
     
     -- Кнопка удаления

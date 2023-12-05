@@ -201,15 +201,7 @@ local function TR_SettingsPaneladd_base()
     spawnmenu.AddToolMenuOption("Options", "Total Replacer", "TR_weapons", "TR Weapons", "", "", TR_SettingsPanel_weapons)
 end
 
--- local function TR_SettingsPaneladd_weapons()
--- end
-
--- local function TR_SettingsPaneladd_weapons()
--- end
-
 hook.Add("PopulateToolMenu", "TR_SettingsPanel_base", TR_SettingsPaneladd_base)
--- hook.Add("PopulateToolMenu", "TR_SettingsPanel_weapons", TR_SettingsPaneladd_weapons)
--- hook.Add("PopulateToolMenu", "TR_SettingsPanel_npc", TR_SettingsPaneladd_npc)
 
 local cur_table_tr_entity = ""
 local items = {}
@@ -533,9 +525,6 @@ concommand.Add("open_tr_menu_edit_entity", function(ply, cmd, args)
 
     -------------------------------------------------------------------------------------------------------------------------
 
-
-
-
     local propscroll = vgui.Create("DScrollPanel", ply.EntityEditor)
     propscroll:Dock(FILL)
     propscroll:DockMargin(300, 24, 16, 16)
@@ -642,5 +631,191 @@ concommand.Add("open_tr_menu_edit_entity", function(ply, cmd, args)
         table.Empty(items)
         entityList:Clear()
         WriteItemsFileTR_Entity(ply, items)
+    end
+    local changeSWEPstoEnts = vgui.Create("DButton", ply.EntityEditor)
+    changeSWEPstoEnts:SetSize(150, 25)
+    changeSWEPstoEnts:SetPos(10, 850)
+    changeSWEPstoEnts:SetText("Change Entities to SWEPs")
+    changeSWEPstoEnts.DoClick = function()
+        ply.EntityEditor:Close()
+        RunConsoleCommand( "open_tr_menu_edit_entity_to_weapon" )
+    end
+end)
+
+concommand.Add("open_tr_menu_edit_entity_to_weapon", function(ply, cmd, args) -- Перевод энтити на оружия
+
+
+    if not ply:IsPlayer() then return end
+
+    local items = ReadItemsFileTR_Entity(ply)
+
+    if IsValid(ply.EntityEditor) then
+        ply.EntityEditor:Remove()
+    end
+    
+    local spawnmenu_border = GetConVar("spawnmenu_border")
+    local MarginX = math.Clamp((ScrW() - 1024) * math.max(0.1, spawnmenu_border:GetFloat()), 25, 256)
+    local MarginY = math.Clamp((ScrH() - 768) * math.max(0.1, spawnmenu_border:GetFloat()), 25, 256)
+    if ScrW() < 1024 or ScrH() < 768 then
+        MarginX = 0
+        MarginY = 0
+    end
+    local changed_lists = {}
+    local dirty = false
+
+    ply.EntityEditor = vgui.Create("DFrame")
+    ply.EntityEditor:SetSize(1000, 900)
+    ply.EntityEditor:SetTitle("Entity replacer")
+    ply.EntityEditor:Center()
+    ply.EntityEditor:MakePopup()
+    
+    --------- Часть кода для панельки выбора оружия (Начало)
+    local panel = vgui.Create("DPanel", ply.EntityEditor)
+    panel:Dock(FILL)    
+
+    local tabs = vgui.Create("DPropertySheet", panel)
+    tabs:Dock(FILL)
+
+    local tab1 = vgui.Create("DPanel")
+    tab1.Paint = function() end -- Оставить пустой метод рисования, чтобы вкладка была прозрачной
+    tabs:AddSheet(cur_table_tr_entity, tab1)
+       
+
+    -- Список текущего оружия игрока
+    local entityList = vgui.Create("DListView", tab1)
+    entityList:SetSize(280, 540)
+    entityList:SetPos(10, 10)
+    entityList:AddColumn("Entities")
+        
+    
+    -- SpawnIcon для выбора оружия
+    local entitySelect = vgui.Create("DPanelSelect", ply.EntityEditor)
+    entitySelect:SetSize(500, 890)
+    entitySelect:SetPos(310, 30)
+
+    for _, entity in pairs(items) do -- Показывает имя в списке уже добавленных в замену
+        entityList:AddLine(entity)
+    end
+
+    -------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+    local propscroll = vgui.Create("DScrollPanel", ply.EntityEditor)
+    propscroll:Dock(FILL)
+    propscroll:DockMargin(300, 24, 16, 16)
+
+    local proppanel = vgui.Create("DTileLayout", propscroll:GetCanvas())
+    proppanel:Dock(FILL)
+
+    local Categorised = {}
+
+    local spawnableEntities = list.Get("Weapon")
+
+    for k, v in pairs(spawnableEntities) do
+        local categ = v.Category or "Other"
+
+        if not isstring(categ) then
+            categ = tostring(categ)
+        end
+
+        Categorised[categ] = Categorised[categ] or {}
+        table.insert(Categorised[categ], v)
+    end
+ 
+    for CategoryName, v in SortedPairs(Categorised) do
+        local Header = vgui.Create("ContentHeader", proppanel)
+        Header:SetText(CategoryName)
+        proppanel:Add(Header)
+
+        for k, SpawnableEntities in SortedPairsByMemberValue(v, "PrintName") do
+            if SpawnableEntities.AdminOnly and not LocalPlayer():IsAdmin() then continue end
+            if SpawnableEntities.Spawnable == false then continue end
+            local icon = vgui.Create("ContentIcon", proppanel)
+            icon:SetMaterial(SpawnableEntities.IconOverride or "entities/" .. SpawnableEntities.ClassName .. ".png")
+            icon:SetName(SpawnableEntities.PrintName or "#" .. SpawnableEntities.ClassName)
+            icon:SetAdminOnly(SpawnableEntities.AdminOnly or false)
+
+            icon.DoClick = function()
+                local chance = 100
+                if not table.HasValue(items, SpawnableEntities.ClassName.. ":"..chance) then
+                    table.insert(items, SpawnableEntities.ClassName.. ":"..chance)
+                    entityList:AddLine(SpawnableEntities.ClassName.. ":"..chance)
+                    WriteItemsFileTR_Entity(ply, items)
+                end
+            end
+            icon.DoRightClick = function()
+                local mouseX, mouseY = input.GetCursorPos()
+                -- Создаем панель (окно) с кнопкой
+                local myPanel = vgui.Create("DFrame")
+                myPanel:SetSize(300, 150)
+                myPanel:SetTitle("Add Entity with chances")
+                myPanel:SetPos(mouseX, mouseY)
+                myPanel:MakePopup()
+
+                local text_chance_NPC = vgui.Create("DLabel", myPanel)
+                text_chance_NPC:SetPos(10, 25)
+                text_chance_NPC:SetSize(200, 20)
+                text_chance_NPC:SetText("Set Chance of Spawn Entity")
+                text_chance_NPC:SetColor(Color(255, 255, 255))
+
+                local myButton = vgui.Create("DButton", myPanel)
+                myButton:SetSize(100, 30)
+                myButton:SetPos(100, 120)
+                myButton:SetText("Set Chance")
+
+                local textEntry = vgui.Create("DTextEntry", myPanel)
+                textEntry:SetSize(280, 30)
+                textEntry:SetPos(10, 40)
+
+                myButton.DoClick = function()
+                    local chance = textEntry:GetValue()
+                    if not table.HasValue(items, SpawnableEntities.ClassName.. ":"..chance) then
+                        table.insert(items, SpawnableEntities.ClassName.. ":"..chance)
+                        entityList:AddLine(SpawnableEntities.ClassName.. ":"..chance)
+                        WriteItemsFileTR_Entity(ply, items)
+                    end
+                    myPanel:Close()
+                end
+            end
+
+
+        end
+    end
+    -------------------------------------------------------------------------------------------------------------------------
+    
+    -- Кнопка удаления
+    local removeButton = vgui.Create("DButton", ply.EntityEditor)
+    removeButton:SetSize(280, 25)
+    removeButton:SetPos(10, 675)
+    removeButton:SetText("Delete selected entity")
+    removeButton.DoClick = function()
+        local selectedLine = entityList:GetSelectedLine()
+        if selectedLine then
+            table.remove(items, selectedLine)
+            WriteItemsFileTR_Entity(ply, items)   
+            entityList:RemoveLine(selectedLine)    
+        end
+    end
+
+    -- Кнопка удаления Всех Записей
+    local removeButtonAll = vgui.Create("DButton", ply.EntityEditor)
+    removeButtonAll:SetSize(100, 25)
+    removeButtonAll:SetPos(10, 800)
+    removeButtonAll:SetText("Delete ALL!")
+    removeButtonAll.DoClick = function()
+        local selectedLine = entityList:GetSelectedLine()
+        table.Empty(items)
+        entityList:Clear()
+        WriteItemsFileTR_Entity(ply, items)
+    end
+    local changeSWEPstoEnts = vgui.Create("DButton", ply.EntityEditor)
+    changeSWEPstoEnts:SetSize(150, 25)
+    changeSWEPstoEnts:SetPos(10, 850)
+    changeSWEPstoEnts:SetText("Change SWEPs to Entities")
+    changeSWEPstoEnts.DoClick = function()
+        ply.EntityEditor:Close()
+        RunConsoleCommand( "open_tr_menu_edit_entity" )
     end
 end)

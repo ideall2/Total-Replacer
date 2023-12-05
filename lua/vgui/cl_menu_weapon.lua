@@ -113,7 +113,6 @@ concommand.Add("tr_weapon_menu", function(ply, cmd, args)
         end
     end
 
-
     local function SavePresetTR(name_preset)
         local files, _ = file.Find("total_weapon_replacer/*.txt", "DATA")
 
@@ -235,7 +234,6 @@ concommand.Add("tr_weapon_menu", function(ply, cmd, args)
 
     end
 
-
     local presetsButton = vgui.Create("DButton", ply.WeaponMenu)
     presetsButton:SetSize(300, 100)
     presetsButton:SetPos(350, 900)
@@ -270,7 +268,6 @@ local function WriteItemsFileTR_Weapon(ply, items_swep)
 end
 
 concommand.Add("open_tr_menu_edit_weapon", function(ply, cmd, args)
-
 
     if not ply:IsPlayer() then return end
 
@@ -428,12 +425,198 @@ concommand.Add("open_tr_menu_edit_weapon", function(ply, cmd, args)
     -- Кнопка удаления Всех Записей
     local removeButtonAll = vgui.Create("DButton", ply.WeaponEditor)
     removeButtonAll:SetSize(100, 25)
-    removeButtonAll:SetPos(10, 800)
+    removeButtonAll:SetPos(10, 750)
     removeButtonAll:SetText("Delete ALL!")
     removeButtonAll.DoClick = function()
         local selectedLine = weaponList:GetSelectedLine()
         table.Empty(items_swep)
         weaponList:Clear()
         WriteItemsFileTR_Weapon(ply, items_swep)
+    end
+
+    local changeSWEPStoEnts = vgui.Create("DButton", ply.WeaponEditor)
+    changeSWEPStoEnts:SetSize(150, 25)
+    changeSWEPStoEnts:SetPos(10, 850)
+    changeSWEPStoEnts:SetText("Change SWEP to Entities")
+    changeSWEPStoEnts.DoClick = function()
+        ply.WeaponEditor:Close()
+        RunConsoleCommand( "open_tr_menu_edit_weapon_to_entity" )
+    end
+end)
+
+concommand.Add("open_tr_menu_edit_weapon_to_entity", function(ply, cmd, args) -- Копия вызова менюшки для выбора оружия, только теперь выбирает энтити.
+
+    if not ply:IsPlayer() then return end
+
+    local items_swep = ReadItemsFileTR_Weapon(ply)
+
+    if IsValid(ply.WeaponEditor) then
+        ply.WeaponEditor:Remove()
+    end
+    
+    local spawnmenu_border = GetConVar("spawnmenu_border")
+    local MarginX = math.Clamp((ScrW() - 1024) * math.max(0.1, spawnmenu_border:GetFloat()), 25, 256)
+    local MarginY = math.Clamp((ScrH() - 768) * math.max(0.1, spawnmenu_border:GetFloat()), 25, 256)
+    if ScrW() < 1024 or ScrH() < 768 then
+        MarginX = 0
+        MarginY = 0
+    end
+    local changed_lists = {}
+    local dirty = false
+
+    ply.WeaponEditor = vgui.Create("DFrame")
+    ply.WeaponEditor:SetSize(1000, 900)
+    ply.WeaponEditor:SetTitle("Weapon replacer")
+    ply.WeaponEditor:Center()
+    ply.WeaponEditor:MakePopup()
+    
+    --------- Часть кода для панельки выбора оружия (Начало)
+    local panel = vgui.Create("DPanel", ply.WeaponEditor)
+    panel:Dock(FILL)    
+
+    local tabs = vgui.Create("DPropertySheet", panel)
+    tabs:Dock(FILL)
+
+    local tab1 = vgui.Create("DPanel")
+    tab1.Paint = function() end -- Оставить пустой метод рисования, чтобы вкладка была прозрачной
+    tabs:AddSheet(cur_table_tr_weapon, tab1)
+       
+
+    -- Список текущего оружия игрока
+    local weaponList = vgui.Create("DListView", tab1)
+    weaponList:SetSize(280, 540)
+    weaponList:SetPos(10, 10)
+    weaponList:AddColumn("Entities")
+        
+    
+    -- SpawnIcon для выбора оружия
+    local weaponSelect = vgui.Create("DPanelSelect", ply.WeaponEditor)
+    weaponSelect:SetSize(500, 890)
+    weaponSelect:SetPos(310, 30)
+
+    for _, weapon in pairs(items_swep) do -- Показывает имя в списке уже добавленных в замену
+        weaponList:AddLine(weapon)
+    end
+
+    -------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+    local propscroll = vgui.Create("DScrollPanel", ply.WeaponEditor)
+    propscroll:Dock(FILL)
+    propscroll:DockMargin(300, 24, 16, 16)
+
+    local proppanel = vgui.Create("DTileLayout", propscroll:GetCanvas())
+    proppanel:Dock(FILL)
+
+    local Categorised = {}
+
+    local spawnmenuWeapons = list.Get("SpawnableEntities")
+
+    for k, v in pairs(spawnmenuWeapons) do
+        local categ = v.Category or "Other"
+
+        if not isstring(categ) then
+            categ = tostring(categ)
+        end
+
+        Categorised[categ] = Categorised[categ] or {}
+        table.insert(Categorised[categ], v)
+    end
+ 
+    for CategoryName, v in SortedPairs(Categorised) do
+        local Header = vgui.Create("ContentHeader", proppanel)
+        Header:SetText(CategoryName)
+        proppanel:Add(Header)
+        for k, SpawnmenuWeapons in SortedPairsByMemberValue(v, "PrintName") do
+            if not LocalPlayer():IsAdmin() then continue end
+            if SpawnmenuWeapons.Spawnable == false then continue end
+            local icon = vgui.Create("ContentIcon", proppanel)
+            icon:SetMaterial(SpawnmenuWeapons.IconOverride or "entities/" .. SpawnmenuWeapons.ClassName .. ".png")
+            icon:SetName(SpawnmenuWeapons.PrintName or "#" .. SpawnmenuWeapons.ClassName)
+            icon:SetAdminOnly(SpawnmenuWeapons.AdminOnly or false)
+
+            icon.DoClick = function()
+                local chance = 100
+                if not table.HasValue(items_swep, SpawnmenuWeapons.ClassName.. ":"..chance) then
+                    table.insert(items_swep, SpawnmenuWeapons.ClassName.. ":"..chance)
+                    weaponList:AddLine(SpawnmenuWeapons.ClassName.. ":"..chance)
+                    WriteItemsFileTR_Weapon(ply, items_swep)
+                end
+            end
+            icon.DoRightClick = function()
+                local mouseX, mouseY = input.GetCursorPos()
+                -- Создаем панель (окно) с кнопкой
+                local myPanel = vgui.Create("DFrame")
+                myPanel:SetSize(300, 150)
+                myPanel:SetTitle("Add Weapon with chances")
+                myPanel:SetPos(mouseX, mouseY)
+                myPanel:MakePopup()
+
+                local text_chance_NPC = vgui.Create("DLabel", myPanel)
+                text_chance_NPC:SetPos(10, 25)
+                text_chance_NPC:SetSize(200, 20)
+                text_chance_NPC:SetText("Set Chance of Spawn Weapon")
+                text_chance_NPC:SetColor(Color(255, 255, 255))
+
+                local myButton = vgui.Create("DButton", myPanel)
+                myButton:SetSize(100, 30)
+                myButton:SetPos(100, 120)
+                myButton:SetText("Set Chance")
+
+                local textEntry = vgui.Create("DTextEntry", myPanel)
+                textEntry:SetSize(280, 30)
+                textEntry:SetPos(10, 40)
+
+                myButton.DoClick = function()
+                    local chance = textEntry:GetValue()
+                    if not table.HasValue(items_swep, SpawnmenuWeapons.ClassName.. ":"..chance) then
+                        table.insert(items_swep, SpawnmenuWeapons.ClassName.. ":"..chance)
+                        weaponList:AddLine(SpawnmenuWeapons.ClassName.. ":"..chance)
+                        WriteItemsFileTR_Weapon(ply, items_swep)
+                    end
+                    myPanel:Close()
+                end
+            end
+
+
+        end
+    end
+    -------------------------------------------------------------------------------------------------------------------------
+    
+    -- Кнопка удаления
+    local removeButton = vgui.Create("DButton", ply.WeaponEditor)
+    removeButton:SetSize(280, 25)
+    removeButton:SetPos(10, 675)
+    removeButton:SetText("Delete selected weapon")
+    removeButton.DoClick = function()
+        local selectedLine = weaponList:GetSelectedLine()
+        if selectedLine then
+            table.remove(items_swep, selectedLine)
+            WriteItemsFileTR_Weapon(ply, items_swep)   
+            weaponList:RemoveLine(selectedLine)    
+        end
+    end
+
+    -- Кнопка удаления Всех Записей
+    local removeButtonAll = vgui.Create("DButton", ply.WeaponEditor)
+    removeButtonAll:SetSize(100, 25)
+    removeButtonAll:SetPos(10, 750)
+    removeButtonAll:SetText("Delete ALL!")
+    removeButtonAll.DoClick = function()
+        local selectedLine = weaponList:GetSelectedLine()
+        table.Empty(items_swep)
+        weaponList:Clear()
+        WriteItemsFileTR_Weapon(ply, items_swep)
+    end
+
+    local changeEntstoSWEPS = vgui.Create("DButton", ply.WeaponEditor)
+    changeEntstoSWEPS:SetSize(150, 25)
+    changeEntstoSWEPS:SetPos(10, 850)
+    changeEntstoSWEPS:SetText("Change Entities to SWEP")
+    changeEntstoSWEPS.DoClick = function()
+        ply.WeaponEditor:Close()
+        RunConsoleCommand( "open_tr_menu_edit_weapon" )
     end
 end)

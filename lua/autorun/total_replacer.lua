@@ -993,7 +993,7 @@ hook.Add("OnEntityCreated", "ReplacingVEHICLE", function(ent)
                         if chance <= chance_vehicle then
                             local name_NW2_VEHICLE = ent:GetNW2String("Spawnmenu_name")
                             if Class_VEHICLE != "" and ent:GetNW2Bool("IsReplaced") != true and table.HasValue(vehicleList, ent:GetNW2String("Spawnmenu_name")) and GetConVar("tr_"..name_NW2_VEHICLE):GetBool() == true then
-                                local newVEHICLE = ents.Create(Class_VEHICLE) -- or random_vehicle) ---- Стандартная замена, если не было отфильтрованно
+                                local newVEHICLE = ents.Create(Class_VEHICLE) -- Стандартная замена, если не было отфильтрованно
                                 local owner = VEHICLEOwners_TR[ent]
                                 newVEHICLE:SetPos(ent:GetPos() + Vector(0, 0, 25))
                                 newVEHICLE:SetAngles(ent:GetAngles())
