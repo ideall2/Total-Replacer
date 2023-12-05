@@ -390,6 +390,7 @@ concommand.Add("open_tr_menu_edit_weapon", function(ply, cmd, args)
 
                 local textEntry = vgui.Create("DTextEntry", myPanel)
                 textEntry:SetSize(280, 30)
+                textEntry:SetText("100")
                 textEntry:SetPos(10, 40)
 
                 myButton.DoClick = function()
