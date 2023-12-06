@@ -350,7 +350,7 @@ concommand.Add("open_tr_menu_edit_vehicle", function(ply, cmd, args)
     -- local spawnmenuVehicles_ready = mergeTables(spawnmenuVehicles, simfphys_vehicles)
     -- PrintTable(spawnmenuVehicles_ready)
 
-    local function categirisng(nametable)    
+    local function get_spawnmenu_icons(nametable)    
         for k, v in pairs(nametable) do
             local categ = v.Category or "Other"
             if not isstring(categ) then
@@ -361,8 +361,8 @@ concommand.Add("open_tr_menu_edit_vehicle", function(ply, cmd, args)
             v.NameKey = k
         end
     end
-    categirisng(spawnmenuVehicles)
-    -- PrintTable(spawnmenuVehicles_ready)
+    get_spawnmenu_icons(spawnmenuVehicles)
+    
     local function test_insert(name_table)
         for CategoryName, v in SortedPairs(Categorised) do
             local Header = vgui.Create("ContentHeader", proppanel)
