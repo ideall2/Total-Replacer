@@ -362,21 +362,21 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
         end
     end
 
-    local function ReadItemsFile_TR_npcweapon(ent, ply)
-        if ent:IsNPC() and ent:GetClass() then
-            local ActiveWeapon = ""
-            if ent:GetActiveWeapon() != NULL then
-                ActiveWeapon = ent:GetActiveWeapon():GetClass()
-            end
+    -- local function ReadItemsFile_TR_npcweapon(ent, ply) -- Сделаю позже замену НПС оружий.
+    --     if ent:IsNPC() and ent:GetClass() then
+    --         local ActiveWeapon = ""
+    --         if ent:GetActiveWeapon() != NULL then
+    --             ActiveWeapon = ent:GetActiveWeapon():GetClass()
+    --         end
 
-            local content = file.Read("total_npcweapon_replacer/"..ActiveWeapon.. ".txt", "DATA")
-            if content then
-                return util.JSONToTable(content) or {}
-            else
-                return {}
-            end
-        end
-    end
+    --         local content = file.Read("total_npcweapon_replacer/"..ActiveWeapon.. ".txt", "DATA")
+    --         if content then
+    --             return util.JSONToTable(content) or {}
+    --         else
+    --             return {}
+    --         end
+    --     end
+    -- end
     -- Функция замены энтити при спавне, а также выдача прав с возможностью удаления с помощью Z если было заспавнено через спавнменю
     local function ReplacingNPC_TR(ent)
         if ent:IsNPC() and IsValid(ent) then -- Ничто кроме NPC
