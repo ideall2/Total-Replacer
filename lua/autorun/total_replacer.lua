@@ -377,6 +377,7 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
     --         end
     --     end
     -- end
+    
     -- Функция замены энтити при спавне, а также выдача прав с возможностью удаления с помощью Z если было заспавнено через спавнменю
     local function ReplacingNPC_TR(ent)
         if ent:IsNPC() and IsValid(ent) then -- Ничто кроме NPC
