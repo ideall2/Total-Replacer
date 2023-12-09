@@ -235,6 +235,8 @@ if SERVER then -- Пусть сначала инициализируются о�
 end
 
 hook.Add( "WeaponEquip", "WeaponReplaced", function( weapon, ply )
+    -- local ammoType = weapon:GetMaxClip1()
+    -- print(ammoType)
     if GetConVar("tr_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена
     if GetConVar("tr_weapon_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена
     if not table.HasValue(weaponList, weapon:GetClass()) then return end -- Нужно чтобы код не выполнялся если нет нужного энтити
@@ -293,14 +295,20 @@ hook.Add( "WeaponEquip", "WeaponReplaced", function( weapon, ply )
                         chance_weapon = tonumber(string.Trim(parts[2])) -- Преобразование строки в число
                     end
                     ---- Конец
-
-
                     ------------------- Шанс
                     local chance = math.random(1, 100)
                     if chance <= chance_weapon then
                         local newWeapon = name_weapon
+                        local newWeapon_info = ents.Create(name_weapon)
+                        local ammoClip = newWeapon_info:GetMaxClip1()
+                        local ammoType = newWeapon_info:GetPrimaryAmmoType()
+                        local ammoType_ready = game.GetAmmoName(ammoType)
+
                         if newWeapon != "clear" then
                             ply:StripWeapon(CheckedWeapon_TR())
+                            if ply:HasWeapon(newWeapon) then
+                                ply:GiveAmmo(ammoClip, ammoType_ready)
+                            end
                             ply:Give(newWeapon)
                         end
                         break
