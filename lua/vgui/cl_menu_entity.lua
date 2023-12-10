@@ -149,7 +149,7 @@ end)
 local function TR_SettingsPanel_base(Panel)
     local openMenuButton = Panel:Button("Open TR")
     openMenuButton.DoClick = function()
-        RunConsoleCommand("tr_entity_menu")
+        RunConsoleCommand("tr_menu")
     end
     Panel:Help("These columns are responsible for generally turning the TR on or off.")
     Panel:AddControl("CheckBox", {Label = "Enable Total Replacer", Command = "tr_enable"})
