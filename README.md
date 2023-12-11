@@ -1,6 +1,5 @@
-# Total Entity Replacer
+# Total Replacer
 
-## English description for steam users 
 Tired of the usual entities from Half-life 2? So I present you this mod, which allows you to replace entities from HL2 with any you want. A big medkit instead of a standart medkit? Easy.
 How about a few variations? Sure.
 I moving on to the functions that this mod can do:
