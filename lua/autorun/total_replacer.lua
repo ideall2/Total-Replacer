@@ -1,4 +1,30 @@
-
+local function CreateFoldersTR()
+    if not file.Exists("total_vehicle_replacer", "DATA") then
+        file.CreateDir("total_vehicle_replacer")
+    end
+    if not file.Exists("total_vehicle_replacer/presets/", "DATA") then
+        file.CreateDir("total_vehicle_replacer/presets/")
+    end
+    if not file.Exists("total_entity_replacer", "DATA") then
+        file.CreateDir("total_entity_replacer")
+    end
+    if not file.Exists("total_entity_replacer/presets/", "DATA") then
+        file.CreateDir("total_entity_replacer/presets/")
+    end
+    if not file.Exists("total_npc_replacer", "DATA") then
+        file.CreateDir("total_npc_replacer")
+    end
+    if not file.Exists("total_npc_replacer/presets/", "DATA") then
+        file.CreateDir("total_npc_replacer/presets/")
+    end
+    if not file.Exists("total_weapon_replacer", "DATA") then
+        file.CreateDir("total_weapon_replacer")
+    end
+    if not file.Exists("total_weapon_replacer/presets/", "DATA") then
+        file.CreateDir("total_weapon_replacer/presets/")
+    end
+end
+CreateFoldersTR()
 
 CreateConVar("tr_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer?", 0, 1 )
 CreateConVar("tr_enable_randomize_weapons", 1, FCVAR_ARCHIVE,"Enable Randomizer for empty Weapons?", 0, 1 )
@@ -299,12 +325,11 @@ hook.Add( "WeaponEquip", "WeaponReplaced", function( weapon, ply )
                     local chance = math.random(1, 100)
                     if chance <= chance_weapon then
                         local newWeapon = name_weapon
-                        local newWeapon_info = ents.Create(name_weapon)
-                        local ammoClip = newWeapon_info:GetMaxClip1()
-                        local ammoType = newWeapon_info:GetPrimaryAmmoType()
-                        local ammoType_ready = game.GetAmmoName(ammoType)
-
                         if newWeapon != "clear" then
+                            local newWeapon_info = ents.Create(name_weapon)
+                            local ammoClip = newWeapon_info:GetMaxClip1()
+                            local ammoType = newWeapon_info:GetPrimaryAmmoType()
+                            local ammoType_ready = game.GetAmmoName(ammoType)
                             ply:StripWeapon(CheckedWeapon_TR())
                             if ply:HasWeapon(newWeapon) then
                                 ply:GiveAmmo(ammoClip, ammoType_ready)
