@@ -870,7 +870,7 @@ hook.Add("OnEntityCreated", "ReplacingEntity", function(ent) -- При созд�
         if not ent:IsNPC() and not ent:IsWeapon() and not ent:IsVehicle() then -- Ничто кроме из вкладки entity 
             -- Без таймера хрен заработает
             timer.Simple(0.0001, function()
-                if IsValid(ent) and CheckedEntity_TR(searched_entity) and not ent:GetOwner():IsPlayer() and not ent:GetOwner():IsNPC() then
+                if IsValid(ent) and CheckedEntity_TR(searched_entity) and not ent:GetOwner():IsPlayer()then
                     while true do
                         ---- Перебор, преобразование строк в нужный формат
                         local randomEntity_table = allRandomEntities[math.random(#allRandomEntities)] 
