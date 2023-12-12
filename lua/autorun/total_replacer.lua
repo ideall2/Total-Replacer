@@ -241,9 +241,12 @@ end)
 
 NPC_NameOld_TR = NULL
 NPC_NameWeapon_TR = NULL
+NPC_NameWeapon_from_Player_TR = NULL
 hook.Add("PlayerSpawnNPC", "GetInfoNPC", function(ply,npc_type,weapon)
     NPC_NameOld_TR = npc_type
     NPC_NameWeapon_TR = weapon
+    NPC_NameWeapon_from_Player_TR = GetConVar("gmod_npcweapon"):GetString()
+    -- print(NPC_NameWeapon_from_Player_TR)
 end)
 
 local allWeapons = list.Get("Weapon") -- Получает весь список энтити из спавнменю которое есть в игре (И даже недоступные для спавна)
@@ -784,17 +787,31 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
                             local name_NW2_NPC = ent:GetNW2String("Spawnmenu_name")
                             if Class_NPC != "" and ent:GetNW2Bool("IsReplaced") != true and table.HasValue(npcList, ent:GetNW2String("Spawnmenu_name")) and GetConVar("tr_"..name_NW2_NPC):GetBool() == true then
                                 -- print(Class_NPC)
-                                local newNPC = ents.Create(Class_NPC) -- or random_npc) ---- Стандартная замена, если не было отфильтрованно
+                                local newNPC = ents.Create(Class_NPC) ---- Стандартная замена, если не было отфильтрованно
                                 local owner = NPCOwners_TR[ent]
+                                local onwer_is_player = nil
+                                local ConVar_Gmod_NPCWeapon = GetConVar("gmod_npcweapon")
+                                local ConVar_Gmod_NPCWeapon_string = nil
+                                if owner != nil then
+                                    onwer_is_player = owner:IsPlayer()
+                                    print(onwer_is_player)
+                                end
+                                if ConVar_Gmod_NPCWeapon != nil then
+                                    ConVar_Gmod_NPCWeapon_string = GetConVar("gmod_npcweapon"):GetString()
+                                end
                                 newNPC:SetPos(ent:GetPos() + Vector(0, 0, 25))
                                 newNPC:SetAngles(ent:GetAngles())
                                 newNPC:SetNW2Bool("IsReplaced", true)
-
+                                
                                 if Name_NPC != "" then
                                     newNPC:SetName(Name_NPC)
                                 end
-                                if Weapons_NPC != ""  then
+                                if Weapons_NPC != "" then
                                     newNPC:Give(Weapons_NPC)
+                                    if ConVar_Gmod_NPCWeapon != nil and ConVar_Gmod_NPCWeapon_string != nil and onwer_is_player == true then
+                                        local Weapon_NPC_spawnmenu = GetConVar("gmod_npcweapon"):GetString()
+                                        newNPC:Give(Weapon_NPC_spawnmenu)
+                                    end
                                 end
                                 for key, value in pairs(keyValues_NPC) do
                                     newNPC:SetKeyValue(key, value)

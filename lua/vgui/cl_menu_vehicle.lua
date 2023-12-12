@@ -22,7 +22,7 @@ concommand.Add("tr_vehicle_menu", function(ply, cmd, args)
     local dirty = false
 
     ply.VehicleMenu = vgui.Create("DFrame")
-    ply.VehicleMenu:SetSize(1000, 1000)
+    ply.VehicleMenu:SetSize(1000, 768)
     ply.VehicleMenu:SetTitle("Total Replacer")
     ply.VehicleMenu:Center()
     ply.VehicleMenu:MakePopup()
@@ -244,8 +244,8 @@ concommand.Add("tr_vehicle_menu", function(ply, cmd, args)
 
 
     local presetsButton = vgui.Create("DButton", ply.VehicleMenu)
-    presetsButton:SetSize(300, 100)
-    presetsButton:SetPos(350, 900)
+    presetsButton:SetSize(300, 50)
+    presetsButton:SetPos(350, 718)
     presetsButton:SetText("Presets")
     presetsButton.DoClick = function()
         OpenPresetsMenuTR()
@@ -298,7 +298,7 @@ concommand.Add("open_tr_menu_edit_vehicle", function(ply, cmd, args)
     local dirty = false
 
     ply.VehicleEditor = vgui.Create("DFrame")
-    ply.VehicleEditor:SetSize(1000, 900)
+    ply.VehicleEditor:SetSize(1000, 768)
     ply.VehicleEditor:SetTitle("Vehicle replacer")
     ply.VehicleEditor:Center()
     ply.VehicleEditor:MakePopup()
@@ -419,21 +419,25 @@ concommand.Add("open_tr_menu_edit_vehicle", function(ply, cmd, args)
     -- Кнопка удаления
     local removeButton = vgui.Create("DButton", ply.VehicleEditor)
     removeButton:SetSize(280, 25)
-    removeButton:SetPos(10, 675)
+    removeButton:SetPos(10, 625)
     removeButton:SetText("Delete selected vehicle")
     removeButton.DoClick = function()
-        local selectedLine = vehicleList:GetSelectedLine()
-        if selectedLine then
-            table.remove(items_swep, selectedLine)
-            WriteItemsFileTR_Vehicle(ply, items_swep)   
-            vehicleList:RemoveLine(selectedLine)    
+        local selectedLine = vehicleList:GetSelected()
+        for _, line in pairs(selectedLine) do
+            local lineID = line:GetID()
+            table.remove(items_swep, lineID)
+            WriteItemsFileTR_Vehicle(ply, items_swep)
+        end
+        vehicleList:Clear()
+        for _, vehicle_line in pairs(items_swep) do -- Показывает имя в списке уже добавленных в замену
+            vehicleList:AddLine(vehicle_line)
         end
     end
 
     -- Кнопка удаления Всех Записей
     local removeButtonAll = vgui.Create("DButton", ply.VehicleEditor)
     removeButtonAll:SetSize(100, 25)
-    removeButtonAll:SetPos(10, 800)
+    removeButtonAll:SetPos(10, 675)
     removeButtonAll:SetText("Delete ALL!")
     removeButtonAll.DoClick = function()
         local selectedLine = vehicleList:GetSelectedLine()

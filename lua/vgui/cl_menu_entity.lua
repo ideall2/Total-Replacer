@@ -218,7 +218,7 @@ concommand.Add("tr_entity_menu", function(ply, cmd, args)
     local dirty = false
 
     ply.EntityMenu = vgui.Create("DFrame")
-    ply.EntityMenu:SetSize(1000, 1000)
+    ply.EntityMenu:SetSize(1000, 768)
     ply.EntityMenu:SetTitle("Total Replacer")
     ply.EntityMenu:Center()
     ply.EntityMenu:MakePopup()
@@ -436,8 +436,8 @@ concommand.Add("tr_entity_menu", function(ply, cmd, args)
 
 
     local presetsButton = vgui.Create("DButton", ply.EntityMenu)
-    presetsButton:SetSize(300, 100)
-    presetsButton:SetPos(350, 900)
+    presetsButton:SetSize(300, 50)
+    presetsButton:SetPos(350, 728)
     presetsButton:SetText("Presets")
     presetsButton.DoClick = function()
         OpenPresetsMenuTR()
@@ -490,7 +490,7 @@ concommand.Add("open_tr_menu_edit_entity", function(ply, cmd, args)
     local dirty = false
 
     ply.EntityEditor = vgui.Create("DFrame")
-    ply.EntityEditor:SetSize(1000, 900)
+    ply.EntityEditor:SetSize(1000, 768)
     ply.EntityEditor:SetTitle("Entity replacer")
     ply.EntityEditor:Center()
     ply.EntityEditor:MakePopup()
@@ -610,21 +610,25 @@ concommand.Add("open_tr_menu_edit_entity", function(ply, cmd, args)
     -- Кнопка удаления
     local removeButton = vgui.Create("DButton", ply.EntityEditor)
     removeButton:SetSize(280, 25)
-    removeButton:SetPos(10, 675)
+    removeButton:SetPos(10, 625)
     removeButton:SetText("Delete selected entity")
     removeButton.DoClick = function()
-        local selectedLine = entityList:GetSelectedLine()
-        if selectedLine then
-            table.remove(items, selectedLine)
-            WriteItemsFileTR_Entity(ply, items)   
-            entityList:RemoveLine(selectedLine)    
+        local selectedLine = entityList:GetSelected()
+        for _, line in pairs(selectedLine) do
+            local lineID = line:GetID()
+            table.remove(items, lineID)
+            WriteItemsFileTR_Entity(ply, items)
+        end
+        entityList:Clear()
+        for _, entity_line in pairs(items) do -- Показывает имя в списке уже добавленных в замену
+            entityList:AddLine(entity_line)
         end
     end
 
     -- Кнопка удаления Всех Записей
     local removeButtonAll = vgui.Create("DButton", ply.EntityEditor)
     removeButtonAll:SetSize(100, 25)
-    removeButtonAll:SetPos(10, 800)
+    removeButtonAll:SetPos(10, 675)
     removeButtonAll:SetText("Delete ALL!")
     removeButtonAll.DoClick = function()
         local selectedLine = entityList:GetSelectedLine()
@@ -634,7 +638,7 @@ concommand.Add("open_tr_menu_edit_entity", function(ply, cmd, args)
     end
     local changeSWEPstoEnts = vgui.Create("DButton", ply.EntityEditor)
     changeSWEPstoEnts:SetSize(150, 25)
-    changeSWEPstoEnts:SetPos(10, 850)
+    changeSWEPstoEnts:SetPos(10, 725)
     changeSWEPstoEnts:SetText("Change Entities to SWEPs")
     changeSWEPstoEnts.DoClick = function()
         ply.EntityEditor:Close()
@@ -664,7 +668,7 @@ concommand.Add("open_tr_menu_edit_entity_to_weapon", function(ply, cmd, args) --
     local dirty = false
 
     ply.EntityEditor = vgui.Create("DFrame")
-    ply.EntityEditor:SetSize(1000, 900)
+    ply.EntityEditor:SetSize(1000, 768)
     ply.EntityEditor:SetTitle("Entity replacer")
     ply.EntityEditor:Center()
     ply.EntityEditor:MakePopup()
@@ -788,21 +792,25 @@ concommand.Add("open_tr_menu_edit_entity_to_weapon", function(ply, cmd, args) --
     -- Кнопка удаления
     local removeButton = vgui.Create("DButton", ply.EntityEditor)
     removeButton:SetSize(280, 25)
-    removeButton:SetPos(10, 675)
+    removeButton:SetPos(10, 625)
     removeButton:SetText("Delete selected entity")
     removeButton.DoClick = function()
-        local selectedLine = entityList:GetSelectedLine()
-        if selectedLine then
-            table.remove(items, selectedLine)
-            WriteItemsFileTR_Entity(ply, items)   
-            entityList:RemoveLine(selectedLine)    
+        local selectedLine = entityList:GetSelected()
+        for _, line in pairs(selectedLine) do
+            local lineID = line:GetID()
+            table.remove(items, lineID)
+            WriteItemsFileTR_Entity(ply, items)
+        end
+        entityList:Clear()
+        for _, entity_line in pairs(items) do -- Показывает имя в списке уже добавленных в замену
+            entityList:AddLine(entity_line)
         end
     end
 
     -- Кнопка удаления Всех Записей
     local removeButtonAll = vgui.Create("DButton", ply.EntityEditor)
     removeButtonAll:SetSize(100, 25)
-    removeButtonAll:SetPos(10, 800)
+    removeButtonAll:SetPos(10, 675)
     removeButtonAll:SetText("Delete ALL!")
     removeButtonAll.DoClick = function()
         local selectedLine = entityList:GetSelectedLine()
@@ -812,7 +820,7 @@ concommand.Add("open_tr_menu_edit_entity_to_weapon", function(ply, cmd, args) --
     end
     local changeSWEPstoEnts = vgui.Create("DButton", ply.EntityEditor)
     changeSWEPstoEnts:SetSize(150, 25)
-    changeSWEPstoEnts:SetPos(10, 850)
+    changeSWEPstoEnts:SetPos(10, 725)
     changeSWEPstoEnts:SetText("Change SWEPs to Entities")
     changeSWEPstoEnts.DoClick = function()
         ply.EntityEditor:Close()

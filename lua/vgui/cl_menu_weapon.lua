@@ -14,7 +14,7 @@ concommand.Add("tr_weapon_menu", function(ply, cmd, args)
     local dirty = false
 
     ply.WeaponMenu = vgui.Create("DFrame")
-    ply.WeaponMenu:SetSize(1000, 1000)
+    ply.WeaponMenu:SetSize(1000, 768)
     ply.WeaponMenu:SetTitle("Total Replacer")
     ply.WeaponMenu:Center()
     ply.WeaponMenu:MakePopup()
@@ -235,8 +235,8 @@ concommand.Add("tr_weapon_menu", function(ply, cmd, args)
     end
 
     local presetsButton = vgui.Create("DButton", ply.WeaponMenu)
-    presetsButton:SetSize(300, 100)
-    presetsButton:SetPos(350, 900)
+    presetsButton:SetSize(300, 50)
+    presetsButton:SetPos(350, 728)
     presetsButton:SetText("Presets")
     presetsButton.DoClick = function()
         OpenPresetsMenuTR()
@@ -288,7 +288,7 @@ concommand.Add("open_tr_menu_edit_weapon", function(ply, cmd, args)
     local dirty = false
 
     ply.WeaponEditor = vgui.Create("DFrame")
-    ply.WeaponEditor:SetSize(1000, 900)
+    ply.WeaponEditor:SetSize(1000, 768)
     ply.WeaponEditor:SetTitle("Weapon replacer")
     ply.WeaponEditor:Center()
     ply.WeaponEditor:MakePopup()
@@ -412,21 +412,25 @@ concommand.Add("open_tr_menu_edit_weapon", function(ply, cmd, args)
     -- Кнопка удаления
     local removeButton = vgui.Create("DButton", ply.WeaponEditor)
     removeButton:SetSize(280, 25)
-    removeButton:SetPos(10, 675)
+    removeButton:SetPos(10, 625)
     removeButton:SetText("Delete selected weapon")
     removeButton.DoClick = function()
-        local selectedLine = weaponList:GetSelectedLine()
-        if selectedLine then
-            table.remove(items_swep, selectedLine)
-            WriteItemsFileTR_Weapon(ply, items_swep)   
-            weaponList:RemoveLine(selectedLine)    
+        local selectedLine = weaponList:GetSelected()
+        for _, line in pairs(selectedLine) do
+            local lineID = line:GetID()
+            table.remove(items_swep, lineID)
+            WriteItemsFileTR_Weapon(ply, items_swep)
+        end
+        weaponList:Clear()
+        for _, weapons_line in pairs(items_swep) do -- Показывает имя в списке уже добавленных в замену
+            weaponList:AddLine(weapons_line)
         end
     end
 
     -- Кнопка удаления Всех Записей
     local removeButtonAll = vgui.Create("DButton", ply.WeaponEditor)
     removeButtonAll:SetSize(100, 25)
-    removeButtonAll:SetPos(10, 750)
+    removeButtonAll:SetPos(10, 675)
     removeButtonAll:SetText("Delete ALL!")
     removeButtonAll.DoClick = function()
         local selectedLine = weaponList:GetSelectedLine()
@@ -437,7 +441,7 @@ concommand.Add("open_tr_menu_edit_weapon", function(ply, cmd, args)
 
     local changeSWEPStoEnts = vgui.Create("DButton", ply.WeaponEditor)
     changeSWEPStoEnts:SetSize(150, 25)
-    changeSWEPStoEnts:SetPos(10, 850)
+    changeSWEPStoEnts:SetPos(10, 725)
     changeSWEPStoEnts:SetText("Change SWEP to Entities")
     changeSWEPStoEnts.DoClick = function()
         ply.WeaponEditor:Close()
@@ -466,7 +470,7 @@ concommand.Add("open_tr_menu_edit_weapon_to_entity", function(ply, cmd, args) --
     local dirty = false
 
     ply.WeaponEditor = vgui.Create("DFrame")
-    ply.WeaponEditor:SetSize(1000, 900)
+    ply.WeaponEditor:SetSize(1000, 768)
     ply.WeaponEditor:SetTitle("Weapon replacer")
     ply.WeaponEditor:Center()
     ply.WeaponEditor:MakePopup()
@@ -589,21 +593,25 @@ concommand.Add("open_tr_menu_edit_weapon_to_entity", function(ply, cmd, args) --
     -- Кнопка удаления
     local removeButton = vgui.Create("DButton", ply.WeaponEditor)
     removeButton:SetSize(280, 25)
-    removeButton:SetPos(10, 675)
+    removeButton:SetPos(10, 625)
     removeButton:SetText("Delete selected weapon")
     removeButton.DoClick = function()
-        local selectedLine = weaponList:GetSelectedLine()
-        if selectedLine then
-            table.remove(items_swep, selectedLine)
-            WriteItemsFileTR_Weapon(ply, items_swep)   
-            weaponList:RemoveLine(selectedLine)    
+        local selectedLine = weaponList:GetSelected()
+        for _, line in pairs(selectedLine) do
+            local lineID = line:GetID()
+            table.remove(items_swep, lineID)
+            WriteItemsFileTR_Weapon(ply, items_swep)
+        end
+        weaponList:Clear()
+        for _, weapons_line in pairs(items_swep) do -- Показывает имя в списке уже добавленных в замену
+            weaponList:AddLine(weapons_line)
         end
     end
 
     -- Кнопка удаления Всех Записей
     local removeButtonAll = vgui.Create("DButton", ply.WeaponEditor)
     removeButtonAll:SetSize(100, 25)
-    removeButtonAll:SetPos(10, 750)
+    removeButtonAll:SetPos(10, 675)
     removeButtonAll:SetText("Delete ALL!")
     removeButtonAll.DoClick = function()
         local selectedLine = weaponList:GetSelectedLine()
@@ -614,7 +622,7 @@ concommand.Add("open_tr_menu_edit_weapon_to_entity", function(ply, cmd, args) --
 
     local changeEntstoSWEPS = vgui.Create("DButton", ply.WeaponEditor)
     changeEntstoSWEPS:SetSize(150, 25)
-    changeEntstoSWEPS:SetPos(10, 850)
+    changeEntstoSWEPS:SetPos(10, 725)
     changeEntstoSWEPS:SetText("Change Entities to SWEP")
     changeEntstoSWEPS.DoClick = function()
         ply.WeaponEditor:Close()

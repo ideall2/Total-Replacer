@@ -33,7 +33,7 @@ concommand.Add("tr_npc_menu", function(ply, cmd, args)
     local dirty = false
 
     ply.NPCMenu = vgui.Create("DFrame")
-    ply.NPCMenu:SetSize(1000, 1000)
+    ply.NPCMenu:SetSize(1000, 768)
     ply.NPCMenu:SetTitle("Total Replacer")
     ply.NPCMenu:Center()
     ply.NPCMenu:MakePopup()
@@ -257,8 +257,8 @@ concommand.Add("tr_npc_menu", function(ply, cmd, args)
 
 
     local presetsButton = vgui.Create("DButton", ply.NPCMenu)
-    presetsButton:SetSize(300, 100)
-    presetsButton:SetPos(350, 900)
+    presetsButton:SetSize(300, 50)
+    presetsButton:SetPos(350, 718)
     presetsButton:SetText("Presets")
     presetsButton.DoClick = function()
         OpenPresetsMenuTR()
@@ -279,13 +279,6 @@ local function ReadItemsFileTR_NPC(ply)
 end
 
 local function WriteItemsFileTR_NPC(ply, items)
-    if not file.Exists("total_npc_replacer", "DATA") or not file.Exists("total_weapon_replacer", "DATA") then
-        -- Чтоб не ругался из-за отсутствия папок и файлов
-        file.CreateDir("total_npc_replacer")
-        file.CreateDir("total_weapon_replacer")
-        file.Write("total_npc_replacer/item_healthvial.txt", "[]")
-        file.Write("total_weapon_replacer/weapon_pistol.txt", "[]")
-    end
     file.Write("total_npc_replacer/" .. cur_table_tr_npc .. ".txt", util.TableToJSON(items))
 end
 
@@ -311,7 +304,7 @@ concommand.Add("open_tr_menu_edit_npc", function(ply, cmd, args)
     local dirty = false
 
     ply.NPCEditor = vgui.Create("DFrame")
-    ply.NPCEditor:SetSize(1000, 900)
+    ply.NPCEditor:SetSize(1000, 768)
     ply.NPCEditor:SetTitle("NPC replacer")
     ply.NPCEditor:Center()
     ply.NPCEditor:MakePopup()
@@ -493,21 +486,26 @@ concommand.Add("open_tr_menu_edit_npc", function(ply, cmd, args)
     -- Кнопка удаления
     local removeButton = vgui.Create("DButton", ply.NPCEditor)
     removeButton:SetSize(280, 25)
-    removeButton:SetPos(10, 675)
+    removeButton:SetPos(10, 625)
     removeButton:SetText("Delete selected npc")
     removeButton.DoClick = function()
-        local selectedLine = npcList:GetSelectedLine()
-        if selectedLine then
-            table.remove(items, selectedLine)
-            WriteItemsFileTR_NPC(ply, items)   
-            npcList:RemoveLine(selectedLine)    
+        local selectedLine = npcList:GetSelected()
+        for _, line in pairs(selectedLine) do
+            local lineID = line:GetID()
+            table.remove(items, lineID)
+            WriteItemsFileTR_NPC(ply, items)
         end
+        npcList:Clear()
+        for _, npc in pairs(items) do -- Показывает имя в списке уже добавленных в замену
+            npcList:AddLine(npc)
+        end
+        -- file.Write("total_npc_replacer/" .. cur_table_tr_npc .. ".txt", util.TableToJSON(items))
     end
 
     -- Кнопка удаления Всех Записей
     local removeButtonAll = vgui.Create("DButton", ply.NPCEditor)
     removeButtonAll:SetSize(100, 25)
-    removeButtonAll:SetPos(10, 800)
+    removeButtonAll:SetPos(10, 675)
     removeButtonAll:SetText("Delete ALL!")
     removeButtonAll.DoClick = function()
         local selectedLine = npcList:GetSelectedLine()
