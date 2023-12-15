@@ -159,7 +159,7 @@ concommand.Add("tr_vehicle_menu", function(ply, cmd, args)
         end
     end
 
-    function OpenPresetsMenuTR()
+    local function OpenPresetsMenuTR()
         local presets_menu_tr = vgui.Create("DFrame")
         presets_menu_tr:SetSize(450, 500)    -- Устанавливаем размеры окна
         presets_menu_tr:Center()             -- Размещаем окно по центру экрана

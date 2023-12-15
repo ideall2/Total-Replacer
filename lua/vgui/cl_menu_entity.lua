@@ -351,7 +351,7 @@ concommand.Add("tr_entity_menu", function(ply, cmd, args)
         end
     end
 
-    function OpenPresetsMenuTR()
+    local function OpenPresetsMenuTR()
         local presets_menu_tr = vgui.Create("DFrame")
         presets_menu_tr:SetSize(450, 500)    -- Устанавливаем размеры окна
         presets_menu_tr:Center()             -- Размещаем окно по центру экрана
@@ -639,7 +639,7 @@ concommand.Add("open_tr_menu_edit_entity", function(ply, cmd, args)
     local changeSWEPstoEnts = vgui.Create("DButton", ply.EntityEditor)
     changeSWEPstoEnts:SetSize(150, 25)
     changeSWEPstoEnts:SetPos(10, 725)
-    changeSWEPstoEnts:SetText("Change Entities to SWEPs")
+    changeSWEPstoEnts:SetText("Show Entities")
     changeSWEPstoEnts.DoClick = function()
         ply.EntityEditor:Close()
         RunConsoleCommand( "open_tr_menu_edit_entity_to_weapon" )
@@ -821,7 +821,7 @@ concommand.Add("open_tr_menu_edit_entity_to_weapon", function(ply, cmd, args) --
     local changeSWEPstoEnts = vgui.Create("DButton", ply.EntityEditor)
     changeSWEPstoEnts:SetSize(150, 25)
     changeSWEPstoEnts:SetPos(10, 725)
-    changeSWEPstoEnts:SetText("Change SWEPs to Entities")
+    changeSWEPstoEnts:SetText("Show SWEPs")
     changeSWEPstoEnts.DoClick = function()
         ply.EntityEditor:Close()
         RunConsoleCommand( "open_tr_menu_edit_entity" )

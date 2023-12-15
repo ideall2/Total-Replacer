@@ -17,6 +17,12 @@ local function CreateFoldersTR()
     if not file.Exists("total_npc_replacer/presets/", "DATA") then
         file.CreateDir("total_npc_replacer/presets/")
     end
+    if not file.Exists("total_npcweapons_replacer", "DATA") then
+        file.CreateDir("total_npcweapons_replacer")
+    end
+    if not file.Exists("total_npcweapons_replacer/presets/", "DATA") then
+        file.CreateDir("total_npcweapons_replacer/presets/")
+    end
     if not file.Exists("total_weapon_replacer", "DATA") then
         file.CreateDir("total_weapon_replacer")
     end
@@ -912,7 +918,6 @@ hook.Add("OnEntityCreated", "ReplacingEntity", function(ent) -- При созд�
                             chance_entity = tonumber(string.Trim(parts[2])) -- Преобразование строки в число
                         end
                         ---- Конец
-
 
                         ------------------- Шанс
                         local chance = math.random(1, 100)
