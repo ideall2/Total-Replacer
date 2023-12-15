@@ -81,7 +81,6 @@ local weaponList = { -- Список с энтити для генерации �
     "weapon_shotgun",
     "weapon_smg1",
     "weapon_stunstick",
-    -- Добавьте другие строки
 }
 local vehicleList = {
     "Jeep",
@@ -394,9 +393,9 @@ end
 hook.Add("OnEntityCreated", "ReplacingNPCWeapons", function(ent)
     if GetConVar("tr_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена       
     if GetConVar("tr_npc_weapons_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена
-    
-    local function ReadItemsFile_TR_npcweapon(ent, ply)
-        local content = file.Read("total_npc_replacer/"..ent.. ".txt", "DATA")
+    if not table.HasValue(weaponList, ent:GetActiveWeapon()) then return end -- Нужно чтобы код не выполнялся если нет нужного энтити
+    local function ReadItemsFile_TR_npcweapon(npc_hold_weapon, ply)
+        local content = file.Read("total_npc_replacer/"..npc_hold_weapon.. ".txt", "DATA")
         if content then
             return util.JSONToTable(content) or {}
         else
@@ -404,12 +403,12 @@ hook.Add("OnEntityCreated", "ReplacingNPCWeapons", function(ent)
         end
     end
 
-    local function ReplacingNPC_TR(ent)
+    local function ReplacingNPC_TR()
         if ent:IsNPC() and IsValid(ent) then -- Ничто кроме NPC
             timer.Simple(0.01, function()
             local weapon_NPC_active = ent:GetActiveWeapon()
                 while true do
-                    local ContentNPC_weapon = ReadItemsFile_TR_npcweapon(ent)
+                    local ContentNPC_weapon = ReadItemsFile_TR_npcweapon(weapon_NPC_active)
                     local ContentNPC_weapon_Choosed = ContentNPC[math.random(#ContentNPC)]
 
                     local npc_pattern = "([^:]+):([^:]+)"
