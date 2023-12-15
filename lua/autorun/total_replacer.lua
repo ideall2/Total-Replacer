@@ -37,6 +37,7 @@ CreateConVar("tr_enable_randomize_weapons", 1, FCVAR_ARCHIVE,"Enable Randomizer 
 CreateConVar("tr_enable_randomize_entities", 1, FCVAR_ARCHIVE,"Enable Randomizer for empty Entities?", 0, 1 )
 CreateConVar("tr_weapon_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for Weapons?", 0, 1 )
 CreateConVar("tr_npc_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for NPCs?", 0, 1 )
+CreateConVar("tr_npc_weapons_mode", 1, FCVAR_ARCHIVE,"Enable Total Replacer for NPCs?", 0, 1 )
 CreateConVar("tr_entity_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for Entities?", 0, 1 )
 CreateConVar("tr_vehicle_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for Vehicles?", 0, 1 )
 
