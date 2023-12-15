@@ -394,6 +394,7 @@ hook.Add("OnEntityCreated", "ReplacingNPCWeapons", function(ent)
     if GetConVar("tr_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена       
     if GetConVar("tr_npc_weapons_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена
     if not table.HasValue(weaponList, ent:GetActiveWeapon()) then return end -- Нужно чтобы код не выполнялся если нет нужного энтити
+    
     local function ReadItemsFile_TR_npcweapon(npc_hold_weapon, ply)
         local content = file.Read("total_npc_replacer/"..npc_hold_weapon.. ".txt", "DATA")
         if content then
