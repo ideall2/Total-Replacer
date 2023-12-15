@@ -918,7 +918,6 @@ hook.Add("OnEntityCreated", "ReplacingEntity", function(ent) -- При созд�
                             chance_entity = tonumber(string.Trim(parts[2])) -- Преобразование строки в число
                         end
                         ---- Конец
-
                         ------------------- Шанс
                         local chance = math.random(1, 100)
                         if chance <= chance_entity then
