@@ -530,7 +530,12 @@ concommand.Add("open_tr_menu_edit_npc", function(ply, cmd, args)
     NPCWeaponsMenu:SetPos(120, 720)
     NPCWeaponsMenu:SetText("Open NPCs Weapons Replacement")
     NPCWeaponsMenu.DoClick = function()
-        local NPC_menu_weapons = vgui.Create("DFrame")
+        
+    end
+end)
+
+concommand.Add("tr_npc_weapons_menu", function(ply, cmd, args)
+    local NPC_menu_weapons = vgui.Create("DFrame")
         NPC_menu_weapons:SetSize(1000, 768)
         NPC_menu_weapons:SetTitle("NPCs Weapons Replacement")
         NPC_menu_weapons:Center()
@@ -759,8 +764,7 @@ concommand.Add("open_tr_menu_edit_npc", function(ply, cmd, args)
         presetsButton.DoClick = function()
             OpenPresetsMenuTR()
         end
-    end
-end)
+    end)
 
 concommand.Add("open_tr_menu_edit_npc_weapons", function(ply, cmd, args)
     if not ply:IsPlayer() then return end
@@ -884,7 +888,7 @@ concommand.Add("open_tr_menu_edit_npc_weapons", function(ply, cmd, args)
                 local text_chance_NPC = vgui.Create("DLabel", Additional_Settings)
                 text_chance_NPC:SetPos(50, 60)
                 text_chance_NPC:SetSize(200, 20)
-                text_chance_NPC:SetText("Set Chance for NPCs")
+                text_chance_NPC:SetText("Set Chance for NPCs weapon")
                 text_chance_NPC:SetColor(Color(255, 255, 255))
 
                 local weapon_list_npc = vgui.Create("DComboBox", Additional_Settings)
@@ -896,7 +900,7 @@ concommand.Add("open_tr_menu_edit_npc_weapons", function(ply, cmd, args)
                 local text_weapon_NPC = vgui.Create("DLabel", Additional_Settings)
                 text_weapon_NPC:SetPos(50, 125)
                 text_weapon_NPC:SetSize(200, 20)
-                text_weapon_NPC:SetText("Set Weapon from NPCs SWEP")
+                text_weapon_NPC:SetText("Set Weapon from NPCs SWEPs")
                 text_weapon_NPC:SetColor(Color(255, 255, 255))
 
                 local weapon_list_player = vgui.Create("DComboBox", Additional_Settings)
@@ -908,7 +912,7 @@ concommand.Add("open_tr_menu_edit_npc_weapons", function(ply, cmd, args)
                 local text_weapon_player = vgui.Create("DLabel", Additional_Settings)
                 text_weapon_player:SetPos(250, 125)
                 text_weapon_player:SetSize(200, 20)
-                text_weapon_player:SetText("Set Weapon from players SWEP")
+                text_weapon_player:SetText("Set Weapon from players SWEPs")
                 text_weapon_player:SetColor(Color(255, 255, 255))
 
                 local manual_add_weapon = vgui.Create("DTextEntry", Additional_Settings)

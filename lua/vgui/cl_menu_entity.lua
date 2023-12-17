@@ -98,8 +98,8 @@ concommand.Add("tr_menu", function(ply, cmd, args)
     -- Функция для создания меню
     local function CreateMenu()
         local frame = vgui.Create("DFrame")
-        frame:SetSize(300, 200)
-        frame:SetTitle("Welcome to Total Replacer.")
+        frame:SetSize(300, 250)
+        frame:SetTitle("Welcome to the Total Replacer.")
         frame:Center()
 
         local button1 = vgui.Create("DButton", frame)
@@ -121,22 +121,32 @@ concommand.Add("tr_menu", function(ply, cmd, args)
             LocalPlayer():ConCommand("tr_npc_menu")
             frame:Close()
         end
-
+        
         local button3 = vgui.Create("DButton", frame)
         button3:SetPos(10, 110)
         button3:SetSize(280, 30)
-        button3:SetText("Replace Weapons")
+        button3:SetText("Replace NPCs Weapons")
         button3.DoClick = function()
-            -- Здесь вы можете указать консольную команду для кнопки 3
-            LocalPlayer():ConCommand("tr_weapon_menu")
+            -- Здесь вы можете указать консольную команду для кнопки 2
+            LocalPlayer():ConCommand("tr_npc_weapons_menu")
             frame:Close()
         end
 
         local button4 = vgui.Create("DButton", frame)
         button4:SetPos(10, 150)
         button4:SetSize(280, 30)
-        button4:SetText("Replace Vehicle")
+        button4:SetText("Replace Weapons")
         button4.DoClick = function()
+            -- Здесь вы можете указать консольную команду для кнопки 3
+            LocalPlayer():ConCommand("tr_weapon_menu")
+            frame:Close()
+        end
+
+        local button5 = vgui.Create("DButton", frame)
+        button5:SetPos(10, 190)
+        button5:SetSize(280, 30)
+        button5:SetText("Replace Vehicle")
+        button5.DoClick = function()
             -- Здесь вы можете указать консольную команду для кнопки 4
             LocalPlayer():ConCommand("tr_vehicle_menu")
             frame:Close()

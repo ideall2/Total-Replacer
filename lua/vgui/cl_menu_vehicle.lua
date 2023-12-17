@@ -4,11 +4,11 @@ local items_swep = {}
 local simfphys_vehicles_in_tr = {}
 local simfphys_vehicles = list.Get("simfphys_vehicles")
 
-for key, value in pairs(simfphys_vehicles) do
-    -- print(getTableName(simfphys_vehicles))    
-    -- print(key)
-    table.insert(simfphys_vehicles_in_tr, key)
-end
+-- for key, value in pairs(simfphys_vehicles) do
+--     -- print(getTableName(simfphys_vehicles))    
+--     -- print(key)
+--     table.insert(simfphys_vehicles_in_tr, key)
+-- end
 
 concommand.Add("tr_vehicle_menu", function(ply, cmd, args)
     local spawnmenu_border = GetConVar("spawnmenu_border")
