@@ -524,14 +524,6 @@ concommand.Add("open_tr_menu_edit_npc", function(ply, cmd, args)
         npcList:Clear()
         WriteItemsFileTR_NPC(ply, items)
     end
-
-    local NPCWeaponsMenu = vgui.Create("DButton", ply.NPCEditor)
-    NPCWeaponsMenu:SetSize(175, 30)
-    NPCWeaponsMenu:SetPos(120, 720)
-    NPCWeaponsMenu:SetText("Open NPCs Weapons Replacement")
-    NPCWeaponsMenu.DoClick = function()
-        
-    end
 end)
 
 concommand.Add("tr_npc_weapons_menu", function(ply, cmd, args)
@@ -561,7 +553,21 @@ concommand.Add("tr_npc_weapons_menu", function(ply, cmd, args)
         local Categorised = {}
     
         local NPC_Weapons = list.Get("Weapon")
-    
+        local weapon_alyxgun = {
+            Category = "Half-Life 2",
+            ClassName = "weapon_alyxgun",
+            PrintName = "Alyx Gun",
+            Spawnable = true
+        }
+        NPC_Weapons.weapon_alyxgun = weapon_alyxgun
+        local weapon_annabelle = {
+            Category = "Half-Life 2",
+            ClassName = "weapon_annabelle",
+            PrintName = "Annabelle",
+            Spawnable = true
+        }
+        NPC_Weapons.weapon_annabelle = weapon_annabelle
+        
         for k, v in pairs(NPC_Weapons) do
             local categ = v.Category or "Other"
             if not isstring(categ) then
@@ -572,6 +578,7 @@ concommand.Add("tr_npc_weapons_menu", function(ply, cmd, args)
             table.insert(Categorised[categ], v)
             v.NameKey = k
         end
+        PrintTable(Categorised)
      
         for CategoryName, v in SortedPairs(Categorised) do
             if CategoryName == "Half-Life 2" then

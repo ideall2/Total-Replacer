@@ -82,6 +82,8 @@ local weaponList = { -- Список с энтити для генерации �
     "weapon_shotgun",
     "weapon_smg1",
     "weapon_stunstick",
+    "weapon_annabelle",
+    "weapon_alyxgun"
 }
 local vehicleList = {
     "Jeep",
@@ -416,11 +418,12 @@ hook.Add("OnEntityCreated", "ReplacingNPCWeapons", function(ent)
             local weapon_NPC_active_class = ""
             if weapon_NPC_active != NULL then
                 weapon_NPC_active_class = ent:GetActiveWeapon():GetClass()
+                -- print(weapon_NPC_active_class)
             end
-                while true do
-                    local ContentNPC_weapon = ReadItemsFile_TR_npcweapon(weapon_NPC_active_class)
-                    local ContentNPC_weapon_Choosed = ContentNPC_weapon[math.random(#ContentNPC_weapon)]
-
+            while true do
+                local ContentNPC_weapon = ReadItemsFile_TR_npcweapon(weapon_NPC_active_class)
+                local ContentNPC_weapon_Choosed = ContentNPC_weapon[math.random(#ContentNPC_weapon)]
+                
                     -- print(ContentNPC_weapon_Choosed)
                     local npc_pattern = "([^:]+):([^:]+)"
                     local weapon_npc, chance_npc_str = nil, nil
@@ -458,6 +461,7 @@ hook.Add("OnEntityCreated", "ReplacingNPCWeapons", function(ent)
 end)
 
 hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
+    if CLIENT then return end
     if GetConVar("tr_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена       
     if GetConVar("tr_npc_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена 
     ------ Функиции для чтения с разных таблиц из папки data
@@ -470,56 +474,15 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
         end
     end
 
---    local function RemoveAndGiveNPCWeaponTR()
---     timer.Simple(0.01, function()
---         if ent:IsNPC() and IsValid(ent) then -- Ничто кроме NPC
---             local NPC_weapon_original = ent:GetActiveWeapon()
---             local NPC_weapon_original_edited = ""
---             if NPC_weapon_original != NULL then
---                 NPC_weapon_original_edited = ent:GetActiveWeapon():GetClass()
---             end
---             if Weapons_NPC != "" and GetConVar("tr_npc_weapons_enable"):GetBool() == true then
---                 local function ReadItemsFile_TR_npcweapon(npc_hold_weapon)
---                     local content = file.Read("total_npcweapons_replacer/"..npc_hold_weapon.. ".txt", "DATA")
---                     if content then
---                         return util.JSONToTable(content) or {}
---                     else
---                         return {}
---                     end
---                 end
-
---                 local ContentNPC_weapon = ReadItemsFile_TR_npcweapon(NPC_weapon_original_edited)
---                 local ContentNPC_weapon_Choosed = ContentNPC_weapon[math.random(#ContentNPC_weapon)]
---                 local npc_pattern = "([^:]+):([^:]+)"
---                 local weapon_npc, chance_npc_str = nil, nil
---                 if ContentNPC_weapon_Choosed != nil then
---                     weapon_npc, chance_npc_str  = string.match(ContentNPC_weapon_Choosed, npc_pattern)
---                 end
---                 if SERVER then
---                     if weapon_npc == nil and GetConVar("tr_enable_randomize_npc_weapons"):GetBool() == true then
---                         weapon_npc = allNPCWeapons_Random[math.random(#allNPCWeapons_Random)]
---                     end
---                 end
---                 -- print(ContentNPC_weapon_Choosed)
---                 local chance = math.random(1, 100)
---                 local chance_npc = 100
---                 if chance_npc_str != nil then
---                     chance_npc = tonumber(chance_npc_str)
---                 end
---                 if SERVER and weapon_npc != nil then
---                     -- ent:Give(weapon_npc)
---                 end
---             end
---         end
---     end)
---     end
---     RemoveAndGiveNPCWeaponTR()
-
     -- Функция замены энтити при спавне, а также выдача прав с возможностью удаления с помощью Z если было заспавнено через спавнменю
     local function ReplacingNPC_TR(ent)
         if ent:IsNPC() and IsValid(ent) then -- Ничто кроме NPC
             -- Без таймера хрен заработает
-            timer.Simple(0.01, function()
+            timer.Simple(0.1, function()
+                -- if SERVER then
+                    -- local NPC_keys = ent:GetKeyValues()
+                    -- PrintTable(NPC_keys)
+                -- end
                 if IsValid(ent) and not ent:GetOwner():IsPlayer() and not ent:GetOwner():IsNPC() and ent:GetNW2Bool("IsReplaced") != true then
                     local Name_NPC_Spawnmenu = NULL
                         if ent:GetClass() == "npc_citizen" then
