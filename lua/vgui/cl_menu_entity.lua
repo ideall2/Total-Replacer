@@ -182,6 +182,15 @@ local function TR_SettingsPanel_weapons(Panel)
     end
     Panel:Help("Authors: IDEALL")
 end
+local function TR_SettingsPanel_presets(Panel)
+    Panel:Help("Presets Settings")
+    Panel:AddControl("CheckBox", {Label = "Enable Specific Map Presets: ", Command = "tr_presets_specific_maps_enable"})
+    Panel:AddControl("CheckBox", {Label = "Enable Specific Map Presets for NPCs", Command = "tr_presets_specific_maps_enable_npc"})
+    Panel:Help("These modes specifically load presets depending on the map. Ideal for campaigns where, for example, Metropolice appear first with normal skins. And then, on the next map they are painted in red colors. ATTENTION! BE SURE TO SAVE YOUR PRESET, OTHERWISE YOU WILL LOSE EVERYTHING THAT WAS IN IT!!!!")
+    -- for key, value in pairs(weaponList) do
+    -- end
+    Panel:Help("Authors: IDEALL")
+end
 local function TR_SettingsPanel_npc(Panel)
     Panel:Help("NPCs Replacing")
     for key, value in pairs(npcList) do
@@ -214,6 +223,7 @@ end
 
 local function TR_SettingsPaneladd_base()
 	spawnmenu.AddToolMenuOption("Options", "Total Replacer", "TR_base", "TR Base", "", "", TR_SettingsPanel_base)
+    spawnmenu.AddToolMenuOption("Options", "Total Replacer", "TR_presets_maps", "TR Presets Maps", "", "", TR_SettingsPanel_presets)
     spawnmenu.AddToolMenuOption("Options", "Total Replacer", "TR_npcs", "TR NPCs", "", "", TR_SettingsPanel_npc)
     spawnmenu.AddToolMenuOption("Options", "Total Replacer", "TR_vehicles", "TR Vehicles", "", "", TR_SettingsPanel_vehicle)
     spawnmenu.AddToolMenuOption("Options", "Total Replacer", "TR_entities", "TR Entities", "", "", TR_SettingsPanel_entity)
@@ -294,173 +304,12 @@ concommand.Add("tr_entity_menu", function(ply, cmd, args)
 
     --------------------------------------------------------------------------------------------------------------------------- Начало кода для пресетов
 
-    local function LoadPresetTR(name_preset)
-        local frame = vgui.Create("DFrame")
-        frame:SetSize(300, 150)
-        frame:Center()
-        frame:SetTitle("Warning")
-        frame:MakePopup() -- Это делает окно активным и позволяет игроку взаимодействовать с ним
-
-        -- Создаем текстовое поле для предупреждения
-        local label = vgui.Create("DLabel", frame)
-        label:SetPos(10, 30) 
-        label:SetSize(280, 60)
-        label:SetText("Warning. Your unsaved preset will be replaced and lost.")
-
-        -- Создаем кнопку подтверждения
-        local confirmButton = vgui.Create("DButton", frame)
-        confirmButton:SetText("Confirm!")
-        confirmButton:SetPos(10, 100)
-        confirmButton:SetSize(130, 30)
-        confirmButton.DoClick = function()
-            local files, _ = file.Find("total_entity_replacer/presets/" .. name_preset .."/*.txt", "DATA")
-
-            for _, filename in ipairs(files) do
-                local content = file.Read("total_entity_replacer/presets/".. name_preset .. "/" .. filename, "DATA")
-                file.Write("total_entity_replacer/" .. filename, content)
-            end
-            frame:Close()
-        end
-
-        -- Создаем кнопку для закрытия
-        local closeButton = vgui.Create("DButton", frame)
-        closeButton:SetText("Cancel")
-        closeButton:SetPos(160, 100)
-        closeButton:SetSize(130, 30)
-        closeButton.DoClick = function()
-            frame:Close()
-        end
-    end
-
-
-    local function SavePresetTR(name_preset)
-        local files, _ = file.Find("total_entity_replacer/*.txt", "DATA")
-
-        -- Пройдитесь по каждому файлу
-        for _, filename in ipairs(files) do
-            -- Прочитайте содержимое файла
-            local content = file.Read("total_entity_replacer/".. filename, "DATA")
-
-            -- Если содержимое существует, записывайте его в новую папку
-            if content then
-                file.Write("total_entity_replacer/presets/".. name_preset .. "/" .. filename, content)
-            end
-        end
-    end
-
-    local function DeletePresetTR(name_preset)
-        -- Путь к папке, которую вы хотите удалить
-        local folderPath = "total_entity_replacer/presets/".. name_preset .. "/*"
-
-        -- Получите список всех файлов и папок в указанной папке
-        local files, folders = file.Find(folderPath, "DATA")
-
-        -- Удаление всех файлов и самой папки
-        for _, filename in ipairs(files) do
-            file.Delete("total_entity_replacer/presets/".. name_preset .. "/" .. filename)
-            file.Delete("total_entity_replacer/presets/".. name_preset)
-        end
-    end
-
-    local function CreateFoldersTR(name_preset)
-        if not file.Exists("total_entity_replacer", "DATA") then
-            file.CreateDir("total_entity_replacer")
-        end
-        if not file.Exists("total_entity_replacer/presets/".. name_preset, "DATA") then
-            file.CreateDir("total_entity_replacer/presets/".. name_preset)
-        end
-    end
-
-    local function OpenPresetsMenuTR()
-        local presets_menu_tr = vgui.Create("DFrame")
-        presets_menu_tr:SetSize(450, 500)    -- Устанавливаем размеры окна
-        presets_menu_tr:Center()             -- Размещаем окно по центру экрана
-        presets_menu_tr:SetTitle("TR Presets Manager")  -- Заголовок окна
-        presets_menu_tr:MakePopup()          -- Делаем окно активным и позволяем пользователю взаимодействовать с ним
-
-        local presetsList = vgui.Create("DListView", presets_menu_tr)
-        presetsList:SetSize(280, 450)
-        presetsList:SetPos(0, 25)
-        presetsList:AddColumn("Presets")
-        selectedLine_presets = presetsList:GetSelected()
-             
-        local presetsButton_in_save = vgui.Create("DButton", presets_menu_tr)
-        presetsButton_in_save:SetSize(100, 25)
-        presetsButton_in_save:SetPos(0, 475)
-        presetsButton_in_save:SetText("Save Presets")
-        presetsButton_in_save.DoClick = function()
-            -- Создаем текстовое поле
-            local frame = vgui.Create("DFrame")
-            frame:SetSize(300, 150)
-            frame:Center()
-            frame:SetTitle("Save presets")
-            frame:MakePopup()
-
-            local textentry = vgui.Create("DTextEntry", frame)
-            textentry:SetSize(280, 30)
-            textentry:SetPos(10, 60) -- Размещаем текстовое поле посередине окна
-            textentry:SetPlaceholderText("Save preset as...") -- Текст-подсказка
-
-            -- Можно добавить кнопку, чтобы что-то сделать с введенным текстом, например:
-            local button = vgui.Create("DButton", frame)
-            button:SetSize(280, 30)
-            button:SetPos(10, 100)
-            button:SetText("Save")
-            button.DoClick = function()
-                namePresetTR = textentry:GetValue() -- Получаем введенное имя
-                button:SetText("Saved!")
-                CreateFoldersTR(namePresetTR)
-                SavePresetTR(namePresetTR)
-                presetsList:AddLine(namePresetTR)
-            end
-        end
-        
-        local presetsButton_in_load = vgui.Create("DButton", presets_menu_tr)
-        presetsButton_in_load:SetSize(100, 25)
-        presetsButton_in_load:SetPos(175, 475)
-        presetsButton_in_load:SetText("Load Presets")
-        presetsButton_in_load.DoClick = function()
-            local selectedLines = presetsList:GetSelected()
-            if selectedLines[1] then -- Если есть выбранная строка
-                local name_preset = selectedLines[1]:GetValue(1) -- Получить значение из первой колонки
-                LoadPresetTR(name_preset)
-            end
-        end
-        
-        
-        -- Получение списка папок из папки data
-        local _, folders_presets = file.Find("data/total_entity_replacer/presets/*", "GAME")
-
-        -- Добавление каждой папки
-        for _, foldername in ipairs(folders_presets) do
-            presetsList:AddLine(foldername)
-        end
-        
-        local presetsButton_in_delete = vgui.Create("DButton", presets_menu_tr)
-        presetsButton_in_delete:SetSize(150, 25)
-        presetsButton_in_delete:SetPos(300, 475)
-        presetsButton_in_delete:SetText("Delete Selected Preset")
-        presetsButton_in_delete.DoClick = function()
-            local selectedLine_presets = presetsList:GetSelected()
-            if selectedLine_presets[1] then -- Если есть выбранная строка
-                local lineID = selectedLine_presets[1]:GetID()
-                presetsList:RemoveLine(lineID)
-                local name_preset = selectedLine_presets[1]:GetValue(1) -- Получить значение из первой колонки
-                DeletePresetTR(name_preset)
-                presetsButton_in_delete:SetText("Successfully deleted")
-            end
-        end
-
-
-    end
-
-
     local presetsButton = vgui.Create("DButton", ply.EntityMenu)
     presetsButton:SetSize(300, 50)
     presetsButton:SetPos(350, 728)
     presetsButton:SetText("Presets")
     presetsButton.DoClick = function()
-        OpenPresetsMenuTR()
+        RunConsoleCommand( "tr_presets_open_menu", "total_entity_replacer" )
     end
 --------------------------------------------------------------------------------------------------------------------------- Конец кода для пресетов 
 end)

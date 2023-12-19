@@ -1,3 +1,4 @@
+local currentMap_TR = game.GetMap()
 local function CreateFoldersTR()
     if not file.Exists("total_vehicle_replacer", "DATA") then
         file.CreateDir("total_vehicle_replacer")
@@ -33,14 +34,68 @@ end
 CreateFoldersTR()
 
 CreateConVar("tr_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer?", 0, 1 )
+
 CreateConVar("tr_enable_randomize_weapons", 0, FCVAR_ARCHIVE,"Enable Randomizer for empty Weapons?", 0, 1 )
 CreateConVar("tr_enable_randomize_entities", 0, FCVAR_ARCHIVE,"Enable Randomizer for empty Entities?", 0, 1 )
 CreateConVar("tr_enable_randomize_npc_weapons", 0, FCVAR_ARCHIVE,"Enable Randomizer for empty NPCs weapons?", 0, 1 )
+
 CreateConVar("tr_weapon_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for Weapons?", 0, 1 )
 CreateConVar("tr_npc_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for NPCs?", 0, 1 )
 CreateConVar("tr_npc_weapons_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for NPCs weapons?", 0, 1 )
 CreateConVar("tr_entity_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for Entities?", 0, 1 )
 CreateConVar("tr_vehicle_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for Vehicles?", 0, 1 )
+
+CreateConVar("tr_presets_specific_maps_enable", 0, FCVAR_ARCHIVE,"Enable Specific Map Presets?", 0, 1 )
+CreateConVar("tr_presets_specific_maps_enable_npc", 0, FCVAR_ARCHIVE,"Enable Specific Map Presets for NPCs?", 0, 1 )
+CreateConVar("tr_presets_specific_maps_enable_weapon", 0, FCVAR_ARCHIVE,"Enable Specific Map Presets for Weapons?", 0, 1 )
+CreateConVar("tr_presets_specific_maps_enable_npc_weapon", 0, FCVAR_ARCHIVE,"Enable Specific Map Presets for NPC's weapons?", 0, 1 )
+CreateConVar("tr_presets_specific_maps_enable_entity", 0, FCVAR_ARCHIVE,"Enable Specific Map Presets for Entities?", 0, 1 )
+CreateConVar("tr_presets_specific_maps_enable_vehicle", 0, FCVAR_ARCHIVE,"Enable Specific Map Presets for Vehicles?", 0, 1 )
+
+
+
+function LoadPresetsStartingMapTR(name_dir_tr, name_preset, map_name)
+    local files, _ = file.Find(name_dir_tr.. "/presets/" .. name_preset.." _-_ "..map_name.."/*.txt", "DATA")
+
+    for _, filename in ipairs(files) do
+        local content = file.Read(name_dir_tr.. "/presets/".. name_preset .." _-_ "..map_name.."/" .. filename, "DATA")
+        file.Write(name_dir_tr.."/" .. filename, content)
+    end
+    print("Карта есть. Загружаю")
+end
+
+function ReplacePresetsStartingMapTR(name_dir_tr)
+    local files, folders = file.Find(name_dir_tr .."/presets".."/*", "DATA")
+
+    for _, folder in ipairs(folders) do
+        local parts = string.Explode(" _-_ ", folder)
+        local name_preset = string.Trim(parts[1])
+        local name_map = string.Trim(parts[2])
+        if file.Exists(name_dir_tr.. "/presets/" .. name_preset.." _-_ "..currentMap_TR, "DATA") then
+            LoadPresetsStartingMapTR(name_dir_tr, name_preset, name_map)
+            break
+        else
+            return false
+        end
+    end
+end
+if GetConVar("tr_presets_specific_maps_enable"):GetBool() == true then
+    if GetConVar("tr_presets_specific_maps_enable_npc"):GetBool() == true then
+        ReplacePresetsStartingMapTR("total_npc_replacer")
+    end
+    if GetConVar("tr_presets_specific_maps_enable_weapon"):GetBool() == true then
+        ReplacePresetsStartingMapTR("total_weapon_replacer")
+    end
+    if GetConVar("tr_presets_specific_maps_enable_entity"):GetBool() == true then
+        ReplacePresetsStartingMapTR("total_entity_replacer")
+    end
+    if GetConVar("tr_presets_specific_maps_enable_npc_weapon"):GetBool() == true then
+        ReplacePresetsStartingMapTR("total_npcweapons_replacer")
+    end
+    if GetConVar("tr_presets_specific_maps_enable_vehicle"):GetBool() == true then
+        ReplacePresetsStartingMapTR("total_vehicle_replacer")
+    end
+end
 
 local entityList = { -- Список с энтити для генерации консольных команд
     "item_healthkit",
@@ -66,6 +121,7 @@ local entityList = { -- Список с энтити для генерации �
     "item_suitcharger",
     "prop_thumper",
     "npc_grenade_frag",
+    "weapon_striderbuster"
 }
 
 local weaponList = { -- Список с энтити для генерации консольных команд
@@ -479,12 +535,9 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
         if ent:IsNPC() and IsValid(ent) then -- Ничто кроме NPC
             -- Без таймера хрен заработает
             timer.Simple(0.1, function()
-                -- if SERVER then
-                    -- local NPC_keys = ent:GetKeyValues()
-                    -- PrintTable(NPC_keys)
-                -- end
                 if IsValid(ent) and not ent:GetOwner():IsPlayer() and not ent:GetOwner():IsNPC() and ent:GetNW2Bool("IsReplaced") != true then
                     local Name_NPC_Spawnmenu = NULL
+                    local namehummer = ent:GetName()
                         if ent:GetClass() == "npc_citizen" then
                             for _, v in pairs(rebels_models) do
                                 local Model_name_NPC = ent:GetModel()
@@ -587,7 +640,7 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
                         end
                         if ent:GetClass() == "npc_antlionguard" then
                             local Model_name_NPC = ent:GetModel()
-                            if Model_name_NPC == "models/antlion_guard.mdl" then
+                            if Model_name_NPC == "models/antlion_guard.mdl" and ent:GetSkin() == 0 then
                                 ent:SetNW2String("Spawnmenu_name", "npc_antlionguard")
                             end
                         end
@@ -768,6 +821,42 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
                             end
                         end
 
+                        -- HL2 Episode 2
+                        if ent:GetClass() == "npc_hunter" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/hunter.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_hunter")
+                            end
+                        end
+                        if ent:GetClass() == "npc_antlion_grub" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_antlion_grub")
+                        end
+                        if ent:GetClass() == "npc_antlion_worker" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/antlion_worker.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_antlion_worker")
+                            end
+                        end
+                        if ent:GetClass() == "npc_antlionguard" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/antlion_guard.mdl" and ent:GetSkin() == 1  then
+                                ent:SetNW2String("Spawnmenu_name", "npc_antlionguardian")
+                            end
+                        end
+                        if ent:GetClass() == "npc_antlion_grub" then
+                            ent:SetNW2String("Spawnmenu_name", "npc_antlionguardian")
+                        end
+
+                        -- HL2 Episode 1
+                        if ent:GetClass() == "npc_zombine" then
+                            local Model_name_NPC = ent:GetModel()
+                            if Model_name_NPC == "models/zombie/zombie_soldier.mdl" then
+                                ent:SetNW2String("Spawnmenu_name", "npc_antlionguardian")
+                            end
+                        end
+                        -- print(ent:GetNW2String("Spawnmenu_name"))
+                        
+
 
 
                     local Name_NPC = ""
@@ -785,7 +874,6 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
                             break
                         end
                     end
-                    -- print(NPC_weapon_original_edited)
                     while true do
                         local ContentNPC = ReadItemsFile_TR_npc(Spawnmenu_name_NPC)
                         local ContentNPC_Choosed = ContentNPC[math.random(#ContentNPC)]
@@ -886,6 +974,12 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
                                     for key, value in pairs(keyValues_NPC) do
                                         newNPC:SetKeyValue(key, value)
                                     end
+                                    if namehummer != "" then
+                                        newNPC:SetName(namehummer)
+                                    end
+                                    
+                                    
+
                                     if Skin_NPC != "" then
                                         newNPC:SetSkin(Skin_NPC)
                                     end
