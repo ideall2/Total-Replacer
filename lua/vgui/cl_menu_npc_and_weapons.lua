@@ -10,17 +10,26 @@ timer.Simple(0.6, function()
     All_Weapons = list.Get("Weapon")
     for k, v in pairs(AllNPC_Weapons) do
         local weaponClass = v.class
-        -- print(v.class)
         table.insert(weapons_NPC, weaponClass)
     end
     for k, v in pairs(All_Weapons) do
-        -- local weaponClass = v.class
-        -- PrintTable(v)
+        local weaponClass = v.ClassName
+        if string.find(weaponClass, "arccw_") or string.find(weaponClass, "tfa_") then
+            if v.Spawnable == true then
+                table.insert(AllNPC_Weapons, v)
+            end
+        end
+    end
+    -- Проходим по каждому элементу исходной таблицы
+
+
+    for k, v in pairs(All_Weapons) do
         if v.Spawnable == true then
             table.insert(weapons_player, v.ClassName)
         end
     end
 end)
+
 
 concommand.Add("tr_npc_menu", function(ply, cmd, args)
     local spawnmenu_border = GetConVar("spawnmenu_border")
@@ -407,7 +416,6 @@ concommand.Add("tr_npc_weapons_menu", function(ply, cmd, args)
             table.insert(Categorised[categ], v)
             v.NameKey = k
         end
-        PrintTable(Categorised)
      
         for CategoryName, v in SortedPairs(Categorised) do
             if CategoryName == "Half-Life 2" then
@@ -516,7 +524,7 @@ concommand.Add("open_tr_menu_edit_npc_weapons", function(ply, cmd, args)
             end
             Categorised[categ] = Categorised[categ] or {}
             table.insert(Categorised[categ], v)
-            v.NameKey = v.class
+            v.NameKey = v.class or v.ClassName
         end
     end
     get_spawnmenu_weapons(AllNPC_Weapons)

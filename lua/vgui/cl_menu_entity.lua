@@ -184,8 +184,12 @@ local function TR_SettingsPanel_weapons(Panel)
 end
 local function TR_SettingsPanel_presets(Panel)
     Panel:Help("Presets Settings")
-    Panel:AddControl("CheckBox", {Label = "Enable Specific Map Presets: ", Command = "tr_presets_specific_maps_enable"})
+    Panel:AddControl("CheckBox", {Label = "Enable Specific Map Presets ", Command = "tr_presets_specific_maps_enable"})
     Panel:AddControl("CheckBox", {Label = "Enable Specific Map Presets for NPCs", Command = "tr_presets_specific_maps_enable_npc"})
+    Panel:AddControl("CheckBox", {Label = "Enable Specific Map Presets for Weapons", Command = "tr_presets_specific_maps_enable_weapon"})
+    Panel:AddControl("CheckBox", {Label = "Enable Specific Map Presets for NPCs Weapons", Command = "tr_presets_specific_maps_enable_npc_weapon"})
+    Panel:AddControl("CheckBox", {Label = "Enable Specific Map Presets for Entities", Command = "tr_presets_specific_maps_enable_entity"})
+    Panel:AddControl("CheckBox", {Label = "Enable Specific Map Presets for Vehicles", Command = "tr_presets_specific_maps_enable_vehicle"})
     Panel:Help("These modes specifically load presets depending on the map. Ideal for campaigns where, for example, Metropolice appear first with normal skins. And then, on the next map they are painted in red colors. ATTENTION! BE SURE TO SAVE YOUR PRESET, OTHERWISE YOU WILL LOSE EVERYTHING THAT WAS IN IT!!!!")
     -- for key, value in pairs(weaponList) do
     -- end
