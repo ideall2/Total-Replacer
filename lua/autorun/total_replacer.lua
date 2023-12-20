@@ -144,7 +144,8 @@ local weaponList = { -- Список с энтити для генерации �
 local vehicleList = {
     "Jeep",
     "Airboat",
-    "Pod"
+    "Pod",
+    "Jalopy"
 }
 local npcList = { -- Список НПС для генерации консольных команд
     "npc_crow",
@@ -1139,6 +1140,10 @@ hook.Add("OnEntityCreated", "ReplacingVEHICLE", function(ent)
                     end
                     if Model_name_Vehicle == "models/airboat.mdl" and ent:GetClass() == "prop_vehicle_airboat" then
                         ent:SetNW2String("Spawnmenu_name", "Airboat")
+                    end
+                    print(ent:GetModel())
+                    if Model_name_Vehicle == "models/vehicle.mdl" and ent:GetClass() == "prop_vehicle_jeep" then
+                        ent:SetNW2String("Spawnmenu_name", "Jalopy")
                     end
                     local Name_VEHICLE = ""
                     local Class_VEHICLE = ""
