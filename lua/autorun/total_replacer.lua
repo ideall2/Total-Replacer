@@ -45,6 +45,11 @@ CreateConVar("tr_npc_weapons_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer fo
 CreateConVar("tr_entity_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for Entities?", 0, 1 )
 CreateConVar("tr_vehicle_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for Vehicles?", 0, 1 )
 
+CreateConVar("tr_weapon_give_ammo_mult", 1, FCVAR_ARCHIVE,"How much ammo should be given to a weapon if you pick up a weapon that is already in your inventory?", 0, 10 )
+
+CreateConVar("tr_npc_off_collision_enable", 1, FCVAR_ARCHIVE,"Disable collision for NPC after spawn?", 0, 1 )
+CreateConVar("tr_npc_off_collision_time", 5, FCVAR_ARCHIVE,"Timer for returning collision", 0, 30 )
+
 CreateConVar("tr_presets_specific_maps_enable", 0, FCVAR_ARCHIVE,"Enable Specific Map Presets?", 0, 1 )
 CreateConVar("tr_presets_specific_maps_enable_npc", 0, FCVAR_ARCHIVE,"Enable Specific Map Presets for NPCs?", 0, 1 )
 CreateConVar("tr_presets_specific_maps_enable_weapon", 0, FCVAR_ARCHIVE,"Enable Specific Map Presets for Weapons?", 0, 1 )
@@ -61,7 +66,7 @@ function LoadPresetsStartingMapTR(name_dir_tr, name_preset, map_name)
         local content = file.Read(name_dir_tr.. "/presets/".. name_preset .." _-_ "..map_name.."/" .. filename, "DATA")
         file.Write(name_dir_tr.."/" .. filename, content)
     end
-    print("Карта есть. Загружаю")
+    -- print("Карта есть. Загружаю")
 end
 
 function ReplacePresetsStartingMapTR(name_dir_tr)
@@ -194,6 +199,11 @@ local npcList = { -- Список НПС для генерации консол�
     "npc_poisonzombie",
     "npc_zombie",
     "npc_zombie_torso",
+    "npc_hunter",
+    "VortigauntUriah",
+    "npc_antlion_worker",
+    "npc_antlionguardian",
+    "npc_zombine",
 }
 local rebels_models = { -- Модели НПС
     "models/humans/group03/female_01.mdl",
@@ -378,10 +388,6 @@ hook.Add( "WeaponEquip", "WeaponReplaced", function( weapon, ply )
                     if current_weapon == nil and GetConVar("tr_enable_randomize_weapons"):GetBool() == true then
                         current_weapon = randomWeapon_table
                     end
-                    ---- Обработка строки: запись выглядит примерно так: "sent_ball:100". sent_ball - имя энтити
-                    ---- и 100 - шанс выпадения. Двоиточие разделяет. Но без обработки она как одна строка.
-                    ---- Дальше идет разделение с условием. Результаты в name_weapon и chance_weapon. Если только имя 
-                    ---- То просто имя будет и все
                     local dataString = current_weapon
                     if dataString == nil then
                         dataString = "clear:100"
@@ -401,6 +407,7 @@ hook.Add( "WeaponEquip", "WeaponReplaced", function( weapon, ply )
                         if newWeapon != "clear" then
                             local newWeapon_info = ents.Create(name_weapon)
                             local ammoClip = newWeapon_info:GetMaxClip1()
+                            ammoClip = ammoClip * GetConVar("tr_weapon_give_ammo_mult"):GetInt()
                             local ammoType = newWeapon_info:GetPrimaryAmmoType()
                             local ammoType_ready = game.GetAmmoName(ammoType)
                             ply:StripWeapon(CheckedWeapon_TR())
@@ -951,7 +958,7 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
                                     if ConVar_Gmod_NPCWeapon != nil then
                                         ConVar_Gmod_NPCWeapon_string = GetConVar("gmod_npcweapon"):GetString()
                                     end
-                                    newNPC:SetPos(ent:GetPos() + Vector(0, 0, 25))
+                                    newNPC:SetPos(ent:GetPos() + Vector(0, 0, 15))
                                     newNPC:SetAngles(ent:GetAngles())
                                     newNPC:SetNW2Bool("IsReplaced", true)
 
@@ -978,8 +985,6 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
                                     if namehummer != "" then
                                         newNPC:SetName(namehummer)
                                     end
-                                    
-                                    
 
                                     if Skin_NPC != "" then
                                         newNPC:SetSkin(Skin_NPC)
@@ -988,6 +993,14 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
                                         newNPC:SetKeyValue("spawnflags",bit.bor(SpawnFlags_NPC))
                                     end
                                     newNPC:Spawn()
+                                    if GetConVar("tr_npc_off_collision_enable"):GetBool() == true then                
+                                        newNPC:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+                                        timer.Simple( GetConVar("tr_npc_off_collision_time"):GetFloat(), function()
+                                            if IsValid(newNPC) then
+                                                newNPC:SetCollisionGroup(COLLISION_GROUP_NPC)
+                                            end
+                                        end)
+                                    end
                                     newNPC:Activate()
                                     if Model_NPC != "" then
                                         newNPC:SetModel(Model_NPC)

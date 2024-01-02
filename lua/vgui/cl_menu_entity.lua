@@ -176,6 +176,8 @@ local function TR_SettingsPanel_base(Panel)
 end
 
 local function TR_SettingsPanel_weapons(Panel)
+    Panel:Help("How much ammo should be given to a weapon if you pick up a weapon that is already in your inventory?")
+    Panel:AddControl("Slider", {type = "float", Label = "Mult Clip Ammo", Command = "tr_weapon_give_ammo_mult", max = 10})
     Panel:Help("Weapons Replacing")
     for key, value in pairs(weaponList) do
         Panel:AddControl("CheckBox", {Label = "Enable TR for Weapon: "..value, Command = "tr_"..value})
@@ -191,11 +193,11 @@ local function TR_SettingsPanel_presets(Panel)
     Panel:AddControl("CheckBox", {Label = "Enable Specific Map Presets for Entities", Command = "tr_presets_specific_maps_enable_entity"})
     Panel:AddControl("CheckBox", {Label = "Enable Specific Map Presets for Vehicles", Command = "tr_presets_specific_maps_enable_vehicle"})
     Panel:Help("These modes specifically load presets depending on the map. Ideal for campaigns where, for example, Metropolice appear first with normal skins. And then, on the next map they are painted in red colors. ATTENTION! BE SURE TO SAVE YOUR PRESET, OTHERWISE YOU WILL LOSE EVERYTHING THAT WAS IN IT!!!!")
-    -- for key, value in pairs(weaponList) do
-    -- end
     Panel:Help("Authors: IDEALL")
 end
 local function TR_SettingsPanel_npc(Panel)
+    Panel:AddControl("CheckBox", {Label = "Disable collision for NPC after spawn", Command = "tr_npc_off_collision_enable"})
+    Panel:AddControl("Slider", {type = "float", Label = "Time off collision", Command = "tr_npc_off_collision_time", max = 30})
     Panel:Help("NPCs Replacing")
     for key, value in pairs(npcList) do
         Panel:AddControl("CheckBox", {Label = "Enable TR for NPC: "..value, Command = "tr_"..value})
