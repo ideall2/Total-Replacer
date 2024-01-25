@@ -62,6 +62,26 @@ concommand.Add("tr_presets_open_menu", function(ply, cmd, name_items)
         end
     end
 
+    local function FactoryResetTR(name_preset)
+        local directoryPath = name_main_folder
+
+        local files = file.Find(directoryPath .. "/*.txt", "DATA")
+
+        for _, fileName in ipairs(files) do
+            local filePath = directoryPath .. "/" .. fileName
+
+            local fileHandle, errorString = file.Open(filePath, "w", "DATA")
+            if fileHandle then
+                fileHandle:Write("[]")
+                fileHandle:Close()
+                print("Очищен файл: " .. filePath)
+            else
+                print("Ошибка при открытии файла: " .. errorString)
+            end
+        end
+
+    end
+
     local function DeletePresetTR(name_preset)
         -- Путь к папке, которую вы хотите удалить
         local folderPath = name_main_folder.."/presets/".. name_preset .. "/*"
@@ -171,6 +191,15 @@ concommand.Add("tr_presets_open_menu", function(ply, cmd, name_items)
                 DeletePresetTR(name_preset)
                 presetsButton_in_delete:SetText("Successfully deleted")
             end
+        end
+
+        local presetsButton_in_factoryreset = vgui.Create("DButton", presets_menu_tr)
+        presetsButton_in_factoryreset:SetSize(168, 55)
+        presetsButton_in_factoryreset:SetPos(280, 50)
+        presetsButton_in_factoryreset:SetText("Factory Reset(Clear active config)")
+        presetsButton_in_factoryreset.DoClick = function()
+            FactoryResetTR(name_preset)
+            presetsButton_in_factoryreset:SetText("Cleared!")
         end
     end
     OpenPresetsMenuTR()

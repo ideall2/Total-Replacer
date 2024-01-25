@@ -2,32 +2,31 @@ local currentMap_TR = game.GetMap()
 local function CreateFoldersTR()
     if not file.Exists("total_vehicle_replacer", "DATA") then
         file.CreateDir("total_vehicle_replacer")
-    end
-    if not file.Exists("total_vehicle_replacer/presets/", "DATA") then
         file.CreateDir("total_vehicle_replacer/presets/")
     end
+
     if not file.Exists("total_entity_replacer", "DATA") then
         file.CreateDir("total_entity_replacer")
-    end
-    if not file.Exists("total_entity_replacer/presets/", "DATA") then
         file.CreateDir("total_entity_replacer/presets/")
     end
+
     if not file.Exists("total_npc_replacer", "DATA") then
         file.CreateDir("total_npc_replacer")
-    end
-    if not file.Exists("total_npc_replacer/presets/", "DATA") then
         file.CreateDir("total_npc_replacer/presets/")
     end
+
+    -- if not file.Exists("total_npcmodels_replacer", "DATA") then
+    --     file.CreateDir("total_npcmodels_replacer")
+    --     file.CreateDir("total_npcmodels_replacer/presets/")
+    -- end
+
     if not file.Exists("total_npcweapons_replacer", "DATA") then
         file.CreateDir("total_npcweapons_replacer")
-    end
-    if not file.Exists("total_npcweapons_replacer/presets/", "DATA") then
         file.CreateDir("total_npcweapons_replacer/presets/")
     end
+
     if not file.Exists("total_weapon_replacer", "DATA") then
         file.CreateDir("total_weapon_replacer")
-    end
-    if not file.Exists("total_weapon_replacer/presets/", "DATA") then
         file.CreateDir("total_weapon_replacer/presets/")
     end
 end
@@ -40,7 +39,9 @@ CreateConVar("tr_enable_randomize_entities", 0, FCVAR_ARCHIVE,"Enable Randomizer
 CreateConVar("tr_enable_randomize_npc_weapons", 0, FCVAR_ARCHIVE,"Enable Randomizer for empty NPCs weapons?", 0, 1 )
 
 CreateConVar("tr_weapon_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for Weapons?", 0, 1 )
+CreateConVar("tr_weapon_alternative_enable", 0, FCVAR_ARCHIVE,"Enable Alternative Total Replacer for Weapons?", 0, 1 )
 CreateConVar("tr_npc_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for NPCs?", 0, 1 )
+-- CreateConVar("tr_npc_models_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for NPCs Models?", 0, 1 )
 CreateConVar("tr_npc_weapons_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for NPCs weapons?", 0, 1 )
 CreateConVar("tr_entity_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for Entities?", 0, 1 )
 CreateConVar("tr_vehicle_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for Vehicles?", 0, 1 )
@@ -305,12 +306,13 @@ end
 EntityOwners_TR = EntityOwners_TR or {}
 NPCOwners_TR = NPCOwners_TR or {}
 VEHICLEOwners_TR = VEHICLEOwners_TR or {} 
--- Глобальная переменная. Очень долго не мог додуматься, как доебаться до создателя.
--- Все это нужно для получения игрока создателя и присваиванию новому энтити и удаление gmod_undo.
--- ДА СУКА. Я доебался до него!
--- Благодаря глобальной переменной я смог вызвать таблицу в нужном месте
+WeaponOwners_TR = WeaponOwners_TR or {} 
+
 hook.Add("PlayerSpawnedSENT", "SavingOwnerEntity", function(ply,ent) -- Тот самый хук который берет создателя при спавне энтити из спавнменю
     EntityOwners_TR[ent] = ply
+end)
+hook.Add("PlayerSpawnedSWEP", "SavingOwnerWeapon", function(ply,ent) -- Тот самый хук который берет создателя при спавне энтити из спавнменю
+    WeaponOwners_TR[ent] = ply
 end)
 hook.Add("PlayerSpawnedNPC", "SavingOwnerNPC", function(ply,ent) -- Тот самый хук который берет создателя при спавне энтити из спавнменю
     NPCOwners_TR[ent] = ply
@@ -385,6 +387,7 @@ hook.Add( "WeaponEquip", "WeaponReplaced", function( weapon, ply )
     -- print(ammoType)
     if GetConVar("tr_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена
     if GetConVar("tr_weapon_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена
+    if GetConVar("tr_weapon_alternative_enable"):GetBool() == true then return end 
     if not table.HasValue(weaponList, weapon:GetClass()) then return end -- Нужно чтобы код не выполнялся если нет нужного энтити
     ------------------------ Общее
 
@@ -463,6 +466,198 @@ hook.Add( "WeaponEquip", "WeaponReplaced", function( weapon, ply )
     end
 end)
 
+hook.Add("EntityTakeDamage", "TR_WhenNPCDieAlternative", function(target, dmginfo)
+    if GetConVar("tr_enable"):GetBool() == false then return end
+    if GetConVar("tr_weapon_enable"):GetBool() == false then return end 
+    if GetConVar("tr_weapon_alternative_enable"):GetBool() == false then return end 
+    
+    if IsValid(target) and target:IsNPC() then
+        if target:Health() - dmginfo:GetDamage() <= 0 then
+            if not table.HasValue(weaponList, target:GetActiveWeapon():GetClass()) then return end -- Нужно чтобы код не выполнялся если нет нужного энтити
+            
+            local npc_droped_weapon = target:GetActiveWeapon()
+            local function CheckedWeapon_TR(searched_weapon) 
+                local nameEnts = target:GetActiveWeapon():GetClass()
+                local targetString = nameEnts
+            
+                -- Флаг для отслеживания, была ли найдена нужная строка
+                local stringFound = false
+                -- Перебор списка строк и поиск нужной строки
+                for _, str in pairs(weaponList) do
+                    if str == targetString then
+                        stringFound = true
+                        searched_weapon = targetString
+                        return searched_weapon
+                    end
+                end
+            end
+        
+            ------ Функиции для чтения с разных таблиц из папки data
+            local function ReadItemsFile_TR_weapon(target, ply)
+                local content = file.Read("total_weapon_replacer/"..npc_droped_weapon:GetClass().. ".txt", "DATA")
+                if content then
+                    return util.JSONToTable(content) or {}
+                else
+                    return {}
+                end
+            end
+
+            while true do
+                ---- Перебор, преобразование строк в нужный формат
+                local randomWeapon_table = allRandomWeapons[math.random(#allRandomWeapons)] 
+                local list_weapon = ReadItemsFile_TR_weapon(npc_droped_weapon)
+                local current_weapon = list_weapon[math.random(#list_weapon)]
+                if current_weapon == nil and GetConVar("tr_enable_randomize_weapons"):GetBool() == true then
+                    current_weapon = randomWeapon_table
+                end
+                ---- Обработка строки: запись выглядит примерно так: "sent_ball:100". sent_ball - имя энтити
+                ---- и 100 - шанс выпадения. Двоиточие разделяет. Но без обработки она как одна строка.
+                ---- Дальше идет разделение с условием. Результаты в name_weapon и chance_weapon. Если только имя 
+                ---- То просто имя будет и все
+                local dataString = current_weapon
+                if dataString == nil then
+                    dataString = "clear:100"
+                end
+                local parts = string.Explode(":", dataString)
+                local name_weapon = string.Trim(parts[1])
+                local startIndex, endIndex = string.find(dataString, ":")
+                local chance_weapon = 100
+                if startIndex then
+                    chance_weapon = tonumber(string.Trim(parts[2])) -- Преобразование строки в число
+                end
+                ---- Конец
+                ------------------- Шанс
+                local chance = math.random(1, 100)
+                if chance <= chance_weapon then
+                    if name_weapon != "clear" then
+                        local newWeapon = ents.Create(name_weapon)
+                        local owner = WeaponOwners_TR[npc_droped_weapon]
+                        newWeapon:SetPos(npc_droped_weapon:GetPos())
+                        newWeapon:SetAngles(npc_droped_weapon:GetAngles())
+                        newWeapon:Spawn()
+                        newWeapon:Activate()
+                        -- newWeapon:SetOwner(owner)
+                        npc_droped_weapon:Remove() -- удаляем энтити
+                        
+                        local nameEnts = newWeapon:GetClass() -- Преобразование в название энтити
+                        local undoName = "Replaced Weapon: "..nameEnts -- Удаляемое имя и конкретное название энтити
+                        undo.Create(undoName) -- Все для работы с Undo и соответсвенно с Z клавишей
+                        undo.AddEntity(newWeapon) -- Все для работы с Undo и соответсвенно с Z клавишей
+                        undo.SetPlayer(owner) -- Присваивание игроку предмет
+                        undo.Finish() -- Наконец можно удалить этот энтити. Не зря ебался с этой хуйней
+                    end
+                    break
+                else
+                    -- В противном случае, продолжаем выполнение цикла
+                end
+            end
+            -- print(target:GetActiveWeapon():GetClass())
+        end
+    end
+    
+end)
+hook.Add("OnEntityCreated", "ReplacingWeaponAlternative", function(ent) -- При создании энтити тотально проверяет а также заполняет таблицы со всеми энтити(пока только из вкладки Энтити)
+    if GetConVar("tr_enable"):GetBool() == false then return end
+    if GetConVar("tr_weapon_enable"):GetBool() == false then return end 
+    if GetConVar("tr_weapon_alternative_enable"):GetBool() == false then return end 
+    
+    if not table.HasValue(weaponList, ent:GetClass()) then return end -- Нужно чтобы код не выполнялся если нет нужного энтити
+            ------------------------ Общее
+        -- Функция нужна для определия, есть ли из списка weaponList то, что заспавнилось
+        local function CheckedWeapon_TR(searched_weapon) 
+            local nameEnts = ent:GetClass()
+            local targetString = nameEnts
+    
+            -- Флаг для отслеживания, была ли найдена нужная строка
+            local stringFound = false
+            -- Перебор списка строк и поиск нужной строки
+            for _, str in pairs(weaponList) do
+                if str == targetString then
+                    stringFound = true
+                    searched_weapon = targetString
+                    return searched_weapon
+                end
+            end
+        end
+    
+    ------ Функиции для чтения с разных таблиц из папки data
+    local function ReadItemsFile_TR_weapon(ent, ply)
+        local content = file.Read("total_weapon_replacer/"..ent:GetClass().. ".txt", "DATA")
+        if content then
+            return util.JSONToTable(content) or {}
+        else
+            return {}
+        end
+    end
+
+    -- Функция замены энтити при спавне, а также выдача прав с возможностью удаления с помощью Z если было заспавнено через спавнменю
+    local function ReplacingWeapon_TR(ent)
+        if ent:IsWeapon() then -- Ничто кроме из вкладки weapon 
+            -- Без таймера хрен заработает
+            timer.Simple(0.0001, function()
+                if IsValid(ent) and CheckedWeapon_TR(searched_weapon) then
+                    local owner_NPC = ent:GetOwner()
+                    if not owner_NPC:IsNPC() then
+                        while true do
+                            ---- Перебор, преобразование строк в нужный формат
+                            local randomWeapon_table = allRandomWeapons[math.random(#allRandomWeapons)] 
+                            local list_weapon = ReadItemsFile_TR_weapon(ent)
+                            local current_weapon = list_weapon[math.random(#list_weapon)]
+                            if current_weapon == nil and GetConVar("tr_enable_randomize_weapons"):GetBool() == true then
+                                current_weapon = randomWeapon_table
+                            end
+                            ---- Обработка строки: запись выглядит примерно так: "sent_ball:100". sent_ball - имя энтити
+                            ---- и 100 - шанс выпадения. Двоиточие разделяет. Но без обработки она как одна строка.
+                            ---- Дальше идет разделение с условием. Результаты в name_weapon и chance_weapon. Если только имя 
+                            ---- То просто имя будет и все
+                            local dataString = current_weapon
+                            if dataString == nil then
+                                dataString = "clear:100"
+                            end
+                            local parts = string.Explode(":", dataString)
+                            local name_weapon = string.Trim(parts[1])
+                            local startIndex, endIndex = string.find(dataString, ":")
+                            local chance_weapon = 100
+                            if startIndex then
+                                chance_weapon = tonumber(string.Trim(parts[2])) -- Преобразование строки в число
+                            end
+                            ---- Конец
+                            ------------------- Шанс
+                            local chance = math.random(1, 100)
+                            if chance <= chance_weapon then
+                                if name_weapon != "clear" then
+                                    local newWeapon = ents.Create(name_weapon)
+                                    local owner = WeaponOwners_TR[ent]
+                                    newWeapon:SetPos(ent:GetPos())
+                                    newWeapon:SetAngles(ent:GetAngles())
+                                    newWeapon:Spawn()
+                                    newWeapon:Activate()
+                                    -- newWeapon:SetOwner(owner)
+                                    ent:Remove() -- удаляем энтити
+                                    
+                                    local nameEnts = newWeapon:GetClass() -- Преобразование в название энтити
+                                    local undoName = "Replaced Weapon: "..nameEnts -- Удаляемое имя и конкретное название энтити
+                                    undo.Create(undoName) -- Все для работы с Undo и соответсвенно с Z клавишей
+                                    undo.AddEntity(newWeapon) -- Все для работы с Undo и соответсвенно с Z клавишей
+                                    undo.SetPlayer(owner) -- Присваивание игроку предмет
+                                    undo.Finish() -- Наконец можно удалить этот энтити. Не зря ебался с этой хуйней
+                                end
+                                break
+                            else
+                                -- В противном случае, продолжаем выполнение цикла
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+    -- Проверка того, что энтити есть в списке Заменяемых а также разрешено ли заменять его
+        if CheckedWeapon_TR() and GetConVar("tr_"..ent:GetClass()):GetBool() == true then
+            ReplacingWeapon_TR(ent)
+        end
+end)
+
 hook.Add("OnEntityCreated", "ReplacingNPCWeapons", function(ent)
     if GetConVar("tr_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена       
     if GetConVar("tr_npc_weapons_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена
@@ -525,6 +720,69 @@ hook.Add("OnEntityCreated", "ReplacingNPCWeapons", function(ent)
     end
     ReplacingNPC_TR()
 end)
+
+
+local function ReadItemsFile_TR_anything(ANY_NameOld_TR, ANY_NameFolder_TR)
+    local content = file.Read("total_"..ANY_NameFolder_TR.."_replacer/"..ANY_NameOld_TR.. ".txt", "DATA")
+    if content then
+        return util.JSONToTable(content) or {}
+    else
+        return {}
+    end
+end
+
+
+-- hook.Add("OnEntityCreated", "ReplacingModelNPC", function(ent)
+--     if CLIENT then return end
+--     if GetConVar("tr_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена       
+--     if GetConVar("tr_npc_models_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена
+--     local function ReplacingModelNPC(ent)
+--         if ent:IsNPC() and IsValid(ent) then -- Ничто кроме NPC            
+--             timer.Simple(0.1, function()
+--                 local current_model_NPC = ent:GetModel()
+--                 local current_model_NPC_ready = string.gsub(current_model_NPC, "/", "_")
+--                 local list_NPCModel = ReadItemsFile_TR_anything(current_model_NPC_ready, "npcmodels")
+--                 if table.IsEmpty(list_NPCModel) then return end
+
+--                 if IsValid(ent) and not ent:GetOwner():IsPlayer() and not ent:GetOwner():IsNPC() and ent:GetNW2Bool("IsReplacedModel") != true then
+--                     while true do
+--                         ---- Перебор, преобразование строк в нужный формат
+--                         -- print(current_model_NPC_ready)
+--                         local choosed_NPCModel = list_NPCModel[math.random(#list_NPCModel)]
+
+--                         local dataString = choosed_NPCModel
+--                         if dataString == nil then
+--                             dataString = "clear:100"
+--                         end
+
+--                         local chance_NPCModel = 100
+--                         local npcmodels_pattern = "([^:]+):([^:]+):([^:]+)"
+--                         local name_NPCModel, chance_NPCModel, skin_NPCModel = nil, nil, nil
+--                         if choosed_NPCModel != nil then
+--                             name_NPCModel, chance_NPCModel, skin_NPCModel = string.match(choosed_NPCModel, npcmodels_pattern)
+--                         end
+--                         if chance_NPCModel != nil then 
+--                             chance_NPCModel = tonumber(chance_NPCModel)
+--                         end
+--                         ------------------- Шанс
+--                         local chance = math.random(1, 100)
+--                         if chance <= chance_NPCModel then
+--                             if name_NPCModel != "clear" then
+--                                 ent:SetModel(name_NPCModel)
+--                             end
+--                             ent:SetNW2Bool("IsReplacedModel", true)
+--                             break
+--                         else
+--                             -- В противном случае, продолжаем выполнение цикла
+--                         end
+--                     end
+--                 end
+--             end)
+--         end
+--     end
+--     ReplacingModelNPC(ent)
+-- end)
+
 
 hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
     if CLIENT then return end
@@ -888,10 +1146,12 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
                         local ContentNPC = ReadItemsFile_TR_npc(Spawnmenu_name_NPC)
                         local ContentNPC_Choosed = ContentNPC[math.random(#ContentNPC)]
 
-                        local npc_pattern = "([^:]+):([^:]+):([^:]+)"
-                        local npc_name, chance_npc_str, weapon_npc = nil, nil, nil
+                        -- local npc_pattern = "([^:]+):([^:]+):([^:]+)"
+                        -- local npc_name, chance_npc_str, weapon_npc = nil, nil, nil
+                        local npc_pattern = "([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+)"
+                        local npc_name, chance_npc_str, weapon_npc, health_npc, model_npc, skin_npc = nil, nil, nil, nil, nil, nil
                         if ContentNPC_Choosed != nil then
-                            npc_name, chance_npc_str, weapon_npc = string.match(ContentNPC_Choosed, npc_pattern)
+                            npc_name, chance_npc_str, weapon_npc, health_npc, model_npc, skin_npc = string.match(ContentNPC_Choosed, npc_pattern)
                         end
                         for key, value in pairs(allNPC) do
                             if key == npc_name then
@@ -988,6 +1248,7 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
                                         newNPC:SetName(namehummer)
                                     end
 
+
                                     if Skin_NPC != "" then
                                         newNPC:SetSkin(Skin_NPC)
                                     end
@@ -1007,6 +1268,16 @@ hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)
                                     if Model_NPC != "" then
                                         newNPC:SetModel(Model_NPC)
                                     end
+                                    if model_npc != "reg" then
+                                        newNPC:SetModel(model_npc)
+                                    end
+                                    if health_npc != "reg" then
+                                        newNPC:SetHealth(health_npc)
+                                    end
+                                    if skin_npc != "reg" then
+                                        newNPC:SetSkin(skin_npc)
+                                    end
+
                                     local nameEnts = newNPC:GetClass() -- Преобразование в название энтити
                                     local undoName = "Replaced NPC: "..nameEnts -- Удаляемое имя и конкретное название энтити
                                     undo.Create(undoName) -- Все для работы с Undo и соответсвенно с Z клавишей
@@ -1156,7 +1427,7 @@ hook.Add("OnEntityCreated", "ReplacingVEHICLE", function(ent)
                     if Model_name_Vehicle == "models/airboat.mdl" and ent:GetClass() == "prop_vehicle_airboat" then
                         ent:SetNW2String("Spawnmenu_name", "Airboat")
                     end
-                    print(ent:GetModel())
+                    -- print(ent:GetModel())
                     if Model_name_Vehicle == "models/vehicle.mdl" and ent:GetClass() == "prop_vehicle_jeep" then
                         ent:SetNW2String("Spawnmenu_name", "Jalopy")
                     end

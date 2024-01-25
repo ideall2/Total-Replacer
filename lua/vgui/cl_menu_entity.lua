@@ -170,7 +170,7 @@ local function TR_SettingsPanel_base(Panel)
     Panel:AddControl("CheckBox", {Label = "Enable Total Replacer for Vehicles", Command = "tr_vehicle_enable"})
     Panel:Help( "These modes enable a randomizer for unfilled entities or weapons. Unfortunately, I couldn't make randomizer for transportation and NPCs, because of the problem with names. In general, if you need randomization, then turn it on, if not, then unfilled intiti or weapons will NOT be replaced if they are not filled.")
     Panel:AddControl("CheckBox", {Label = "Enable Randomizer for empty lists in Weapons", Command = "tr_enable_randomize_weapons"})
-    Panel:AddControl("CheckBox", {Label = "Enable Randomizer for empty lists in NPC Weapons", Command = "tr_enable_randomize_weapons"})
+    Panel:AddControl("CheckBox", {Label = "Enable Randomizer for empty lists in NPC Weapons", Command = "tr_enable_randomize_npc_weapons"})
     Panel:AddControl("CheckBox", {Label = "Enable Randomizer for empty lists in Entities", Command = "tr_enable_randomize_entities"})
     Panel:Help("Authors: IDEALL")
 end
