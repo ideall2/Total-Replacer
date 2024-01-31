@@ -245,7 +245,7 @@ local folderPath_npcmodels = "total_npcmodels_replacer"
 local files = ReadItemsAndCreateConVarsTR(folderPath_npcmodels)
 
 local function TR_SettingsPanel_models_npc(Panel)
-    Panel:Help("NPC Models Replacing")
+    Panel:Help("Warning: This NPC model replacement may be unstable and buggy. Also, take into account the compatibility of animation (if you take a zombie model and replace it with Metropolice, Metropolice will break). It is better to download a package of models for the necessary NPCs and replace them.")
     for key, value in pairs(files) do
         CreateConVar("tr_npc_model_"..value, 1, FCVAR_ARCHIVE,"Enable replacer for NPC Model "..value, 0, 1 )
         Panel:AddControl("CheckBox", {Label = "Enable TR for NPC Models: "..value, Command = "tr_npc_model_"..value})
