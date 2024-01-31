@@ -94,6 +94,20 @@ local npcList = { -- Список НПС для генерации консол�
     "npc_zombie_torso",
 }
 
+local function ReadItemsAndCreateConVarsTR(folderPath)
+    local fileList = {}
+
+    -- Получаем список файлов в указанной папке
+    local files, _ = file.Find(folderPath .. "/*", "DATA")
+
+    -- Проходимся по списку файлов и добавляем их в таблицу
+    for _, fileName in ipairs(files) do
+        table.insert(fileList, fileName)
+    end
+
+    return fileList
+end
+
 concommand.Add("tr_menu", function(ply, cmd, args)
     -- Функция для создания меню
     local function CreateMenu()
@@ -179,6 +193,7 @@ local function TR_SettingsPanel_weapons(Panel)
     Panel:Help("How much ammo should be given to a weapon if you pick up a weapon that is already in your inventory?")
     Panel:AddControl("Slider", {type = "float", Label = "Mult Clip Ammo", Command = "tr_weapon_give_ammo_mult", max = 10})
     Panel:Help("Weapons Replacing")
+    Panel:AddControl("CheckBox", {Label = "Enable Alternative Replacing?", Command = "tr_weapon_alternative_enable"})
     for key, value in pairs(weaponList) do
         Panel:AddControl("CheckBox", {Label = "Enable TR for Weapon: "..value, Command = "tr_"..value})
     end
@@ -226,6 +241,18 @@ local function TR_SettingsPanel_vehicle(Panel)
     Panel:Help("Authors: IDEALL")
 end
 
+local folderPath_npcmodels = "total_npcmodels_replacer"
+local files = ReadItemsAndCreateConVarsTR(folderPath_npcmodels)
+
+local function TR_SettingsPanel_models_npc(Panel)
+    Panel:Help("NPC Models Replacing")
+    for key, value in pairs(files) do
+        CreateConVar("tr_npc_model_"..value, 1, FCVAR_ARCHIVE,"Enable replacer for NPC Model "..value, 0, 1 )
+        Panel:AddControl("CheckBox", {Label = "Enable TR for NPC Models: "..value, Command = "tr_npc_model_"..value})
+    end
+    Panel:Help("Authors: IDEALL")
+end
+
 
 local function TR_SettingsPaneladd_base()
 	spawnmenu.AddToolMenuOption("Options", "Total Replacer", "TR_base", "TR Base", "", "", TR_SettingsPanel_base)
@@ -235,6 +262,7 @@ local function TR_SettingsPaneladd_base()
     spawnmenu.AddToolMenuOption("Options", "Total Replacer", "TR_entities", "TR Entities", "", "", TR_SettingsPanel_entity)
     spawnmenu.AddToolMenuOption("Options", "Total Replacer", "TR_weapons", "TR Weapons", "", "", TR_SettingsPanel_weapons)
     spawnmenu.AddToolMenuOption("Options", "Total Replacer", "TR_weapons_npc", "TR NPCs Weapons", "", "", TR_SettingsPanel_weapons_npc)
+    spawnmenu.AddToolMenuOption("Options", "Total Replacer", "TR_models_npc", "TR NPCs Models", "", "", TR_SettingsPanel_models_npc)
 end
 
 hook.Add("PopulateToolMenu", "TR_SettingsPanel_base", TR_SettingsPaneladd_base)

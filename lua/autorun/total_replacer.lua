@@ -15,10 +15,10 @@ local function CreateFoldersTR()
         file.CreateDir("total_npc_replacer/presets/")
     end
 
-    -- if not file.Exists("total_npcmodels_replacer", "DATA") then
-    --     file.CreateDir("total_npcmodels_replacer")
-    --     file.CreateDir("total_npcmodels_replacer/presets/")
-    -- end
+    if not file.Exists("total_npcmodels_replacer", "DATA") then
+        file.CreateDir("total_npcmodels_replacer")
+        file.CreateDir("total_npcmodels_replacer/presets/")
+    end
 
     if not file.Exists("total_npcweapons_replacer", "DATA") then
         file.CreateDir("total_npcweapons_replacer")
@@ -41,7 +41,7 @@ CreateConVar("tr_enable_randomize_npc_weapons", 0, FCVAR_ARCHIVE,"Enable Randomi
 CreateConVar("tr_weapon_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for Weapons?", 0, 1 )
 CreateConVar("tr_weapon_alternative_enable", 0, FCVAR_ARCHIVE,"Enable Alternative Total Replacer for Weapons?", 0, 1 )
 CreateConVar("tr_npc_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for NPCs?", 0, 1 )
--- CreateConVar("tr_npc_models_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for NPCs Models?", 0, 1 )
+CreateConVar("tr_npc_models_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for NPCs Models?", 0, 1 )
 CreateConVar("tr_npc_weapons_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for NPCs weapons?", 0, 1 )
 CreateConVar("tr_entity_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for Entities?", 0, 1 )
 CreateConVar("tr_vehicle_enable", 1, FCVAR_ARCHIVE,"Enable Total Replacer for Vehicles?", 0, 1 )
@@ -732,56 +732,71 @@ local function ReadItemsFile_TR_anything(ANY_NameOld_TR, ANY_NameFolder_TR)
 end
 
 
--- hook.Add("OnEntityCreated", "ReplacingModelNPC", function(ent)
---     if CLIENT then return end
---     if GetConVar("tr_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена       
---     if GetConVar("tr_npc_models_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена
---     local function ReplacingModelNPC(ent)
---         if ent:IsNPC() and IsValid(ent) then -- Ничто кроме NPC            
---             timer.Simple(0.1, function()
---                 local current_model_NPC = ent:GetModel()
---                 local current_model_NPC_ready = string.gsub(current_model_NPC, "/", "_")
---                 local list_NPCModel = ReadItemsFile_TR_anything(current_model_NPC_ready, "npcmodels")
---                 if table.IsEmpty(list_NPCModel) then return end
+hook.Add("OnEntityCreated", "ReplacingModelNPC", function(ent)
+    if CLIENT then return end
+    if GetConVar("tr_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена       
+    if GetConVar("tr_npc_models_enable"):GetBool() == false then return end -- Не врублена замена, значит не будет выполнена
+    
+    local function ReplacingModelNPC(ent)
+        if ent:IsNPC() and IsValid(ent) then -- Ничто кроме NPC
+            timer.Simple(0.1, function()
+                local current_model_NPC = ent:GetModel()
+                local current_model_NPC_ready = string.gsub(current_model_NPC, "/", "_")
+                
+                local conVarName = "tr_npc_model_" .. current_model_NPC_ready .. ".txt"
+                local conVar = GetConVar(conVarName)
 
---                 if IsValid(ent) and not ent:GetOwner():IsPlayer() and not ent:GetOwner():IsNPC() and ent:GetNW2Bool("IsReplacedModel") != true then
---                     while true do
---                         ---- Перебор, преобразование строк в нужный формат
---                         -- print(current_model_NPC_ready)
---                         local choosed_NPCModel = list_NPCModel[math.random(#list_NPCModel)]
+                -- Проверяем, существует ли консольная переменная
+                if conVar ~= nil then
+                    -- Проверяем значение консольной переменной
+                    if conVar:GetBool() == false then
+                        return
+                    end
+                else
+                end
 
---                         local dataString = choosed_NPCModel
---                         if dataString == nil then
---                             dataString = "clear:100"
---                         end
+                -- if GetConVar("tr_npc_model_"..current_model_NPC_ready..".txt"):GetBool() == false then return end
+                local list_NPCModel = ReadItemsFile_TR_anything(current_model_NPC_ready, "npcmodels")
+                if table.IsEmpty(list_NPCModel) then return end
 
---                         local chance_NPCModel = 100
---                         local npcmodels_pattern = "([^:]+):([^:]+):([^:]+)"
---                         local name_NPCModel, chance_NPCModel, skin_NPCModel = nil, nil, nil
---                         if choosed_NPCModel != nil then
---                             name_NPCModel, chance_NPCModel, skin_NPCModel = string.match(choosed_NPCModel, npcmodels_pattern)
---                         end
---                         if chance_NPCModel != nil then 
---                             chance_NPCModel = tonumber(chance_NPCModel)
---                         end
---                         ------------------- Шанс
---                         local chance = math.random(1, 100)
---                         if chance <= chance_NPCModel then
---                             if name_NPCModel != "clear" then
---                                 ent:SetModel(name_NPCModel)
---                             end
---                             ent:SetNW2Bool("IsReplacedModel", true)
---                             break
---                         else
---                             -- В противном случае, продолжаем выполнение цикла
---                         end
---                     end
---                 end
---             end)
---         end
---     end
---     ReplacingModelNPC(ent)
--- end)
+                if IsValid(ent) and not ent:GetOwner():IsPlayer() and not ent:GetOwner():IsNPC() and ent:GetNW2Bool("IsReplacedModel") != true then
+                    while true do
+                        ---- Перебор, преобразование строк в нужный формат
+                        -- print(current_model_NPC_ready)
+                        local choosed_NPCModel = list_NPCModel[math.random(#list_NPCModel)]
+
+                        local dataString = choosed_NPCModel
+                        if dataString == nil then
+                            dataString = "clear:100"
+                        end
+
+                        local chance_NPCModel = 100
+                        local npcmodels_pattern = "([^:]+):([^:]+):([^:]+)"
+                        local name_NPCModel, chance_NPCModel, skin_NPCModel = nil, nil, nil
+                        if choosed_NPCModel != nil then
+                            name_NPCModel, chance_NPCModel, skin_NPCModel = string.match(choosed_NPCModel, npcmodels_pattern)
+                        end
+                        if chance_NPCModel != nil then 
+                            chance_NPCModel = tonumber(chance_NPCModel)
+                        end
+                        ------------------- Шанс
+                        local chance = math.random(1, 100)
+                        if chance <= chance_NPCModel then
+                            if name_NPCModel != "clear" then
+                                ent:SetModel(name_NPCModel)
+                            end
+                            ent:SetNW2Bool("IsReplacedModel", true)
+                            break
+                        else
+                            -- В противном случае, продолжаем выполнение цикла
+                        end
+                    end
+                end
+            end)
+        end
+    end
+    ReplacingModelNPC(ent)
+end)
 
 
 hook.Add("OnEntityCreated", "ReplacingNPC", function(ent)

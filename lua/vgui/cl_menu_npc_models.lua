@@ -112,7 +112,7 @@ local function TR_NPCModelsMenuOpen(name_model)
     local frame = vgui.Create("DFrame")
     frame:SetSize(1000, 768)
     frame:Center()
-    frame:SetTitle("TR Prop: "..name_model)
+    frame:SetTitle("TR Model: "..name_model)
     frame:MakePopup()
 
     local mainPanel = vgui.Create("DPanel", frame)
@@ -129,11 +129,11 @@ local function TR_NPCModelsMenuOpen(name_model)
 
     local modelList1 = vgui.Create("DListView", leftPanel)
     modelList1:Dock(FILL)
-    modelList1:AddColumn("Prop")
+    modelList1:AddColumn("Model")
 
     local modelList2 = vgui.Create("DListView", rightPanel)
     modelList2:Dock(FILL)
-    modelList2:AddColumn("Added props")
+    modelList2:AddColumn("Added models")
 
     for _, model in pairs(npcModels) do
         modelList1:AddLine(model)
@@ -142,18 +142,18 @@ local function TR_NPCModelsMenuOpen(name_model)
     local searchEntry = vgui.Create("DTextEntry", frame)
     searchEntry:Dock(TOP)
     searchEntry:SetSize(0, 25)
-    searchEntry:SetPlaceholderText("Search Prop")
-    local customProp = vgui.Create("DTextEntry", frame)
-    customProp:Dock(TOP)
-    customProp:SetSize(0, 25)
-    customProp:SetPlaceholderText("Set custom prop(Use Q-Menu to copy props)")
+    searchEntry:SetPlaceholderText("Search Model")
+    local customModel = vgui.Create("DTextEntry", frame)
+    customModel:Dock(TOP)
+    customModel:SetSize(0, 25)
+    customModel:SetPlaceholderText("Set custom model(Use Q-Menu to copy models)")
 
     local previewPanel = vgui.Create("DPanel", frame)
     previewPanel:Dock(FILL)
     previewPanel:SetSize(0, 100)
 
     local previewLabel = vgui.Create("DLabel", previewPanel)
-    previewLabel:SetText("Preview Prop")
+    previewLabel:SetText("Preview Model")
     previewLabel:Dock(TOP)
 
     local previewModel = vgui.Create("DModelPanel", previewPanel)
@@ -190,12 +190,12 @@ local function TR_NPCModelsMenuOpen(name_model)
     AddButton.DoClick = function()
         local chance = 100
         local Skin = 0
-        if not table.HasValue(items_NPC_Models, selected_NPC_Model.. ":"..chance..":"..Skin) and customProp:GetValue() != "" then
-            modelList2:AddLine(customProp:GetValue().. ":"..chance..":"..Skin)
-            table.insert(items_NPC_Models, customProp:GetValue().. ":"..chance..":"..Skin)
+        if not table.HasValue(items_NPC_Models, selected_NPC_Model.. ":"..chance..":"..Skin) and customModel:GetValue() != "" then
+            modelList2:AddLine(customModel:GetValue().. ":"..chance..":"..Skin)
+            table.insert(items_NPC_Models, customModel:GetValue().. ":"..chance..":"..Skin)
             WriteItemsFileTR_NPCModels(ply, items_NPC_Models)
         end
-        if not table.HasValue(items_NPC_Models, selected_NPC_Model.. ":"..chance..":"..Skin) and customProp:GetValue() == "" then
+        if not table.HasValue(items_NPC_Models, selected_NPC_Model.. ":"..chance..":"..Skin) and customModel:GetValue() == "" then
             modelList2:AddLine(selected_NPC_Model.. ":"..chance..":"..Skin)
             table.insert(items_NPC_Models, selected_NPC_Model.. ":"..chance..":"..Skin)
             WriteItemsFileTR_NPCModels(ply, items_NPC_Models)
@@ -213,7 +213,7 @@ local function TR_NPCModelsMenuOpen(name_model)
     local removeButton = vgui.Create("DButton", frame)
     removeButton:SetSize(280, 25)
     removeButton:SetPos(10, 625)
-    removeButton:SetText("Delete selected Props")
+    removeButton:SetText("Delete selected Models")
     removeButton.DoClick = function()
         local selectedLine = modelList2:GetSelected()
         for _, line in pairs(selectedLine) do
@@ -253,7 +253,7 @@ concommand.Add("tr_npc_models_menu", function(ply, cmd, args)
     local frame = vgui.Create("DFrame")
     frame:SetSize(800, 768)
     frame:Center()
-    frame:SetTitle("Choose Prop")
+    frame:SetTitle("Choose Model")
     frame:MakePopup()
 
     local modelList = vgui.Create("DListView", frame)
@@ -268,19 +268,19 @@ concommand.Add("tr_npc_models_menu", function(ply, cmd, args)
     local searchEntry = vgui.Create("DTextEntry", frame)
     searchEntry:Dock(TOP)
     searchEntry:SetSize(0, 25)
-    searchEntry:SetPlaceholderText("Search Prop")
+    searchEntry:SetPlaceholderText("Search Models")
 
-    local customProp = vgui.Create("DTextEntry", frame)
-    customProp:Dock(TOP)
-    customProp:SetSize(0, 25)
-    customProp:SetPlaceholderText("Or type in the location of Prop...(Use Q-Menu For Copy Props)")
+    local customModel = vgui.Create("DTextEntry", frame)
+    customModel:Dock(TOP)
+    customModel:SetSize(0, 25)
+    customModel:SetPlaceholderText("Or type in the location of Model...(Use Q-Menu For Copy Models)")
 
     local previewPanel = vgui.Create("DPanel", frame)
     previewPanel:Dock(FILL)
     previewPanel:SetSize(0, 100)
 
     local previewLabel = vgui.Create("DLabel", previewPanel)
-    previewLabel:SetText("Preview Prop")
+    previewLabel:SetText("Preview Model")
     previewLabel:Dock(TOP)
 
     local previewModel = vgui.Create("DModelPanel", previewPanel)
@@ -319,8 +319,8 @@ concommand.Add("tr_npc_models_menu", function(ply, cmd, args)
     openMenuButton:SetPos(300, 718)
     openMenuButton:SetText("Open Replacer")
     openMenuButton.DoClick = function()
-        if customProp:GetValue() != "" then
-            TR_NPCModelsMenuOpen(customProp:GetValue())
+        if customModel:GetValue() != "" then
+            TR_NPCModelsMenuOpen(customModel:GetValue())
         else
             TR_NPCModelsMenuOpen(cur_table_tr_npc_model)
         end
